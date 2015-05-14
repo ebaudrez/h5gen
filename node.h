@@ -19,12 +19,14 @@
 #ifndef NODE_H_INCLUDED
 #define NODE_H_INCLUDED
 
+/* forward declarations */
+typedef struct node_t node_t;
+typedef struct nodelist_t nodelist_t;
+
 typedef enum {
     NODE_FILE,
     NODE_GROUP
 } node_type_t;
-
-typedef struct node_t node_t;
 
 typedef struct node_t {
     node_type_t type;
@@ -35,7 +37,8 @@ typedef struct node_t {
         } file;
 
         struct {
-            char *name;
+            char       *name;
+            nodelist_t *members;
         } group;
     } u;
 } node_t;
@@ -44,8 +47,18 @@ typedef struct node_t {
 extern node_t *file;
 
 extern node_t *node_new_file(const char *name, node_t *root_group);
-extern node_t *node_new_group(const char *name);
+extern node_t *node_new_group(const char *name, nodelist_t *members);
 extern void    node_free(node_t *node);
-extern int     node_write_file(node_t *node, const char *name);
+extern int     node_create_file(node_t *node, const char *name);
+
+/* node lists */
+typedef struct nodelist_t {
+    nodelist_t *next;
+    node_t     *node;
+} nodelist_t;
+
+extern nodelist_t *nodelist_prepend(nodelist_t *list, node_t *node);
+extern void        nodelist_free(nodelist_t *list);
+extern nodelist_t *nodelist_reverse(nodelist_t *list);
 
 #endif /* NODE_H_INCLUDED */

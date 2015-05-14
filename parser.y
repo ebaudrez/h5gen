@@ -17,23 +17,30 @@
  */
 
 %{
+#include <stdlib.h>
 #include "log.h"
 #include "node.h"
 %}
 
 %union {
-    node_t *node;
-    char   *string;
+    char       *string;
+    node_t     *node;
+    nodelist_t *list;
 }
 
-%token <string> IDENTIFIER
 %token HDF5 GROUP
+%token <string> IDENTIFIER
 %type <node> file group
+%type <list> member_list
 
 %%
 
 file        : HDF5 IDENTIFIER '{' group '}' { file = node_new_file($2, $4); }
             ;
 
-group       : GROUP IDENTIFIER '{' '}' { $$ = node_new_group($2); }
+group       : GROUP IDENTIFIER '{' member_list '}' { $$ = node_new_group($2, $4); }
+            ;
+
+member_list : /* empty */ { $$ = NULL; }
+            | member_list group { $$ = nodelist_prepend($1, $2); }
             ;

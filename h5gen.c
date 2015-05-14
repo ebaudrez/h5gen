@@ -122,7 +122,7 @@ main(int argc, char **argv)
         log_error("could not parse DDL");
         goto end;
     }
-    node_write_file(file, options->output);
+    node_create_file(file, options->output);
 
 end:
     opt_free(options);
