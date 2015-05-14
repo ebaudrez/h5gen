@@ -46,7 +46,7 @@ node_new_group(const char *name, nodelist_t *members)
     assert(node = malloc(sizeof *node));
     node->type = NODE_GROUP;
     node->u.group.name = strdup(name);
-    node->u.group.members = members;
+    node->u.group.members = nodelist_reverse(members);
     return node;
 }
 
