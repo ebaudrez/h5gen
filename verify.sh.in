@@ -18,7 +18,7 @@ for ddl in @srcdir@/*.ddl
 do
     basename=`basename $ddl`
     h5="${basename%.ddl}.h5"
-    ./h5gen -o "$h5" $ddl
+    ./h5gen -o "$h5" $ddl || exit
     @H5DUMP@ "$h5" | @DIFF@ -w - "$ddl" || exit
     rm -f "$h5"
 done
