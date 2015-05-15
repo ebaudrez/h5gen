@@ -52,6 +52,9 @@ main(int argc, char **argv)
     node_free(file);
 
 end:
+    if (options->input) {
+        fclose(yyin);
+    }
     opt_free(options);
     return EXIT_SUCCESS;
 }
