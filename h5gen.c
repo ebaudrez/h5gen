@@ -46,7 +46,9 @@ main(int argc, char **argv)
         log_error("could not parse DDL");
         goto end;
     }
-    node_create(file, NULL, options);
+    if (node_create(file, NULL, options) != 0) {
+        log_error("error creating HDF5 file");
+    }
     node_free(file);
 
 end:
