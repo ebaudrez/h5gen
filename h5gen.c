@@ -21,89 +21,13 @@
 #include "node.h"
 #include "parser.h"
 #include <stdlib.h>
-#include <unistd.h>
-#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include "opt.h"
 
 /* interface to lexer */
 extern FILE *yyin;
-
-static void
-print_usage(void)
-{
-    puts("h5gen - generate HDF5 files from DDL\n"
-         "Usage\n"
-         "    h5gen [ -o output.h5 ] [ input.ddl ]\n"
-         "\n"
-         "Options\n"
-         "    -o output.h5: output HDF5 file to output.h5 (default: use name in DDL)\n"
-         "\n"
-         "Input\n"
-         "    input.ddl: file containing DDL (default: read from stdin)\n");
-}
-
-typedef struct {
-    char *input;
-    char *output;
-} opt_t;
-
-static opt_t *
-opt_new(int argc, char **argv)
-{
-    int opt;
-    opt_t *options;
-
-    options = malloc(sizeof *options);
-    if (!options) return NULL;
-    options->input = NULL;
-    options->output = NULL;
-    opterr = 0; /* prevent getopt() from printing error messages */
-    while ((opt = getopt(argc, argv, ":ho:")) != -1) {
-        switch (opt) {
-            case 'o':
-                options->output = strdup(optarg);
-                break;
-
-            case 'h':
-                print_usage();
-                exit(EXIT_SUCCESS);
-                break;
-
-            case '?':
-                log_error("invalid option '%c'", optopt);
-                print_usage();
-                exit(EXIT_FAILURE);
-
-            case ':':
-                log_error("missing argument for option '%c'", optopt);
-                print_usage();
-                exit(EXIT_FAILURE);
-
-            default:
-                assert(0);
-        }
-    }
-    while (optind < argc) {
-        if (options->input) {
-            log_error("only one input file is allowed");
-            print_usage();
-            exit(EXIT_FAILURE);
-        }
-        options->input = strdup(argv[optind++]);
-    }
-    return options;
-}
-
-static void
-opt_free(opt_t *options)
-{
-    if (!options) return;
-    free(options->input);
-    free(options->output);
-    free(options);
-}
 
 int
 main(int argc, char **argv)
