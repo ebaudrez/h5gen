@@ -34,6 +34,7 @@ node_new_file(char *name, node_t *root_group)
     node_t *node;
     assert(node = malloc(sizeof *node));
     node->type = NODE_FILE;
+    node->id = -1;
     node->u.file.name = name; /* no need to strdup(); storage already allocated by unquote() */
     node->u.file.root_group = root_group;
     return node;
@@ -45,6 +46,7 @@ node_new_group(char *name, nodelist_t *members)
     node_t *node;
     assert(node = malloc(sizeof *node));
     node->type = NODE_GROUP;
+    node->id = -1;
     node->u.group.name = name;
     node->u.group.members = nodelist_reverse(members);
     return node;
@@ -73,42 +75,41 @@ node_free(node_t *node)
 }
 
 /* forward declaration */
-static int node_create(node_t *node, node_t *parent, hid_t locid);
+static int node_create(node_t *node, node_t *parent);
 
 static int
-node_create_group(node_t *node, node_t *parent, hid_t locid)
+node_create_group(node_t *node, node_t *parent)
 {
-    hid_t group;
     herr_t err;
 
     assert(node);
     assert(node->type == NODE_GROUP);
     if (parent->type == NODE_FILE && strcmp(node->u.group.name, "/") == 0) {
         /* root group "/" is created automatically */
-        group = H5Gopen(locid, node->u.group.name, H5P_DEFAULT);
+        node->id = H5Gopen(parent->id, node->u.group.name, H5P_DEFAULT);
     }
     else {
-        group = H5Gcreate(locid, node->u.group.name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        node->id = H5Gcreate(parent->id, node->u.group.name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     }
-    if (group < 0) return -1;
+    if (node->id < 0) return -1;
     nodelist_t *p = node->u.group.members;
     while (p) {
-        err = node_create(p->node, node, group);
+        err = node_create(p->node, node);
         if (err < 0) return err;
         p = p->next;
     }
-    err = H5Gclose(group);
+    err = H5Gclose(node->id);
     if (err < 0) return err;
     return 0;
 }
 
 static int
-node_create(node_t *node, node_t *parent, hid_t locid)
+node_create(node_t *node, node_t *parent)
 {
     assert(node);
     switch (node->type) {
         case NODE_GROUP:
-            return node_create_group(node, parent, locid);
+            return node_create_group(node, parent);
 
         default:
             log_error("cannot write a node of type %d", node->type);
@@ -119,7 +120,6 @@ node_create(node_t *node, node_t *parent, hid_t locid)
 int
 node_create_file(node_t *node, opt_t *options)
 {
-    hid_t file;
     herr_t err;
     const char *name;
 
@@ -132,20 +132,20 @@ node_create_file(node_t *node, opt_t *options)
     }
     if (!name) name = node->u.file.name;
 
-    file = H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    if (file < 0) {
+    node->id = H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    if (node->id < 0) {
         err = -1;
         goto fail;
     }
-    err = node_create(node->u.file.root_group, node, file);
+    err = node_create(node->u.file.root_group, node);
     if (err < 0) goto fail;
-    err = H5Fclose(file);
+    err = H5Fclose(node->id);
     if (err < 0) goto fail;
     return 0;
 
 fail:
     log_error("failure creating HDF5 file (err = %d)", err);
-    if (file >= 0) H5Fclose(file); /* attempt emergency close */
+    if (node->id >= 0) H5Fclose(node->id); /* attempt emergency close */
     return -1;
 }
 

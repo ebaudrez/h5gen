@@ -20,6 +20,7 @@
 #define NODE_H_INCLUDED
 
 #include "opt.h"
+#include <hdf5.h>
 
 /* forward declarations */
 typedef struct node_t node_t;
@@ -32,6 +33,7 @@ typedef enum {
 
 typedef struct node_t {
     node_type_t type;
+    hid_t       id;
     union {
         struct {
             char   *name;
