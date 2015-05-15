@@ -46,7 +46,7 @@ main(int argc, char **argv)
         log_error("could not parse DDL");
         goto end;
     }
-    node_create_file(file, NULL, options);
+    node_create(file, NULL, options);
     node_free(file);
 
 end:
