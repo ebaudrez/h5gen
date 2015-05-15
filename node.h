@@ -46,8 +46,8 @@ typedef struct node_t {
 /* root node of the tree */
 extern node_t *file;
 
-extern node_t *node_new_file(const char *name, node_t *root_group);
-extern node_t *node_new_group(const char *name, nodelist_t *members);
+extern node_t *node_new_file(char *name, node_t *root_group);
+extern node_t *node_new_group(char *name, nodelist_t *members);
 extern void    node_free(node_t *node);
 extern int     node_create_file(node_t *node, const char *name);
 

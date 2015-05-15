@@ -123,6 +123,7 @@ main(int argc, char **argv)
         goto end;
     }
     node_create_file(file, options->output);
+    node_free(file);
 
 end:
     opt_free(options);

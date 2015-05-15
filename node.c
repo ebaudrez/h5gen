@@ -29,23 +29,23 @@
 node_t *file = NULL;
 
 node_t *
-node_new_file(const char *name, node_t *root_group)
+node_new_file(char *name, node_t *root_group)
 {
     node_t *node;
     assert(node = malloc(sizeof *node));
     node->type = NODE_FILE;
-    node->u.file.name = strdup(name);
+    node->u.file.name = name; /* no need to strdup(); storage already allocated by unquote() */
     node->u.file.root_group = root_group;
     return node;
 }
 
 node_t *
-node_new_group(const char *name, nodelist_t *members)
+node_new_group(char *name, nodelist_t *members)
 {
     node_t *node;
     assert(node = malloc(sizeof *node));
     node->type = NODE_GROUP;
-    node->u.group.name = strdup(name);
+    node->u.group.name = name;
     node->u.group.members = nodelist_reverse(members);
     return node;
 }
@@ -69,6 +69,7 @@ node_free(node_t *node)
             log_error("unknown node type %d", node->type);
             assert(0);
     }
+    free(node);
 }
 
 /* forward declaration */
@@ -135,7 +136,8 @@ node_create_file(node_t *node, const char *name)
     root = H5Gopen(file, "/", H5P_DEFAULT);
     nodelist_t *p = r->u.group.members;
     while (p) {
-        node_create(p->node, root);
+        err = node_create(p->node, root);
+        if (err < 0) goto fail;
         p = p->next;
     }
 
@@ -167,8 +169,7 @@ void
 nodelist_free(nodelist_t *list)
 {
     if (!list) return;
-    /* TODO */
-    assert(0);
+    SGLIB_LIST_MAP_ON_ELEMENTS(nodelist_t, list, p, next, (node_free(p->node), free(p)));
 }
 
 nodelist_t *
