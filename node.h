@@ -19,6 +19,8 @@
 #ifndef NODE_H_INCLUDED
 #define NODE_H_INCLUDED
 
+#include "opt.h"
+
 /* forward declarations */
 typedef struct node_t node_t;
 typedef struct nodelist_t nodelist_t;
@@ -49,7 +51,7 @@ extern node_t *file;
 extern node_t *node_new_file(char *name, node_t *root_group);
 extern node_t *node_new_group(char *name, nodelist_t *members);
 extern void    node_free(node_t *node);
-extern int     node_create_file(node_t *node, const char *name);
+extern int     node_create_file(node_t *node, opt_t *options);
 
 /* node lists */
 typedef struct nodelist_t {

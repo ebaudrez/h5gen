@@ -117,13 +117,16 @@ node_create(node_t *node, node_t *parent, hid_t locid)
 }
 
 int
-node_create_file(node_t *node, const char *name)
+node_create_file(node_t *node, opt_t *options)
 {
     hid_t file;
     herr_t err;
+    const char *name;
 
     assert(node);
     assert(node->type == NODE_FILE);
+    assert(options);
+    name = options->output;
     if (name && strcmp(name, node->u.file.name) != 0) {
         log_info("output file name (%s) different from DDL (%s); ignoring DDL file name", name, node->u.file.name);
     }
