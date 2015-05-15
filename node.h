@@ -53,7 +53,7 @@ extern node_t *file;
 extern node_t *node_new_file(char *name, node_t *root_group);
 extern node_t *node_new_group(char *name, nodelist_t *members);
 extern void    node_free(node_t *node);
-extern int     node_create_file(node_t *node, opt_t *options);
+extern int     node_create_file(node_t *node, node_t *parent, opt_t *options);
 
 /* node lists */
 typedef struct nodelist_t {

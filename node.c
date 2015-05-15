@@ -75,10 +75,10 @@ node_free(node_t *node)
 }
 
 /* forward declaration */
-static int node_create(node_t *node, node_t *parent);
+static int node_create(node_t *node, node_t *parent, opt_t *options);
 
 static int
-node_create_group(node_t *node, node_t *parent)
+node_create_group(node_t *node, node_t *parent, opt_t *options)
 {
     herr_t err;
 
@@ -94,7 +94,7 @@ node_create_group(node_t *node, node_t *parent)
     if (node->id < 0) return -1;
     nodelist_t *p = node->u.group.members;
     while (p) {
-        err = node_create(p->node, node);
+        err = node_create(p->node, node, options);
         if (err < 0) return err;
         p = p->next;
     }
@@ -104,12 +104,12 @@ node_create_group(node_t *node, node_t *parent)
 }
 
 static int
-node_create(node_t *node, node_t *parent)
+node_create(node_t *node, node_t *parent, opt_t *options)
 {
     assert(node);
     switch (node->type) {
         case NODE_GROUP:
-            return node_create_group(node, parent);
+            return node_create_group(node, parent, options);
 
         default:
             log_error("cannot write a node of type %d", node->type);
@@ -118,7 +118,7 @@ node_create(node_t *node, node_t *parent)
 }
 
 int
-node_create_file(node_t *node, opt_t *options)
+node_create_file(node_t *node, node_t *parent, opt_t *options)
 {
     herr_t err;
     const char *name;
@@ -137,7 +137,7 @@ node_create_file(node_t *node, opt_t *options)
         err = -1;
         goto fail;
     }
-    err = node_create(node->u.file.root_group, node);
+    err = node_create(node->u.file.root_group, node, options);
     if (err < 0) goto fail;
     err = H5Fclose(node->id);
     if (err < 0) goto fail;
