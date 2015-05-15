@@ -73,21 +73,28 @@ node_free(node_t *node)
 }
 
 /* forward declaration */
-static int node_create(node_t *node, hid_t locid);
+static int node_create(node_t *node, node_t *parent, hid_t locid);
 
 static int
-node_create_group(node_t *node, hid_t locid)
+node_create_group(node_t *node, node_t *parent, hid_t locid)
 {
     hid_t group;
     herr_t err;
 
     assert(node);
     assert(node->type == NODE_GROUP);
-    group = H5Gcreate(locid, node->u.group.name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    if (parent->type == NODE_FILE && strcmp(node->u.group.name, "/") == 0) {
+        /* root group "/" is created automatically */
+        group = H5Gopen(locid, node->u.group.name, H5P_DEFAULT);
+    }
+    else {
+        group = H5Gcreate(locid, node->u.group.name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    }
     if (group < 0) return -1;
     nodelist_t *p = node->u.group.members;
     while (p) {
-        node_create(p->node, group);
+        err = node_create(p->node, node, group);
+        if (err < 0) return err;
         p = p->next;
     }
     err = H5Gclose(group);
@@ -96,12 +103,12 @@ node_create_group(node_t *node, hid_t locid)
 }
 
 static int
-node_create(node_t *node, hid_t locid)
+node_create(node_t *node, node_t *parent, hid_t locid)
 {
     assert(node);
     switch (node->type) {
         case NODE_GROUP:
-            return node_create_group(node, locid);
+            return node_create_group(node, parent, locid);
 
         default:
             log_error("cannot write a node of type %d", node->type);
@@ -112,7 +119,7 @@ node_create(node_t *node, hid_t locid)
 int
 node_create_file(node_t *node, const char *name)
 {
-    hid_t file, root;
+    hid_t file;
     herr_t err;
 
     assert(node);
@@ -127,21 +134,7 @@ node_create_file(node_t *node, const char *name)
         err = -1;
         goto fail;
     }
-
-    /* no need to create the root group; it's created automatically */
-    node_t *r = node->u.file.root_group;
-    assert(r->type == NODE_GROUP);
-
-    /* but must descend into it and iterate over its members */
-    root = H5Gopen(file, "/", H5P_DEFAULT);
-    nodelist_t *p = r->u.group.members;
-    while (p) {
-        err = node_create(p->node, root);
-        if (err < 0) goto fail;
-        p = p->next;
-    }
-
-    err = H5Gclose(root);
+    err = node_create(node->u.file.root_group, node, file);
     if (err < 0) goto fail;
     err = H5Fclose(file);
     if (err < 0) goto fail;
