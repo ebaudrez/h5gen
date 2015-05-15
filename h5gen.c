@@ -33,6 +33,7 @@ int
 main(int argc, char **argv)
 {
     opt_t *options;
+    int    rc = EXIT_FAILURE;
 
     options = opt_new(argc, argv);
     if (options->input) {
@@ -50,11 +51,12 @@ main(int argc, char **argv)
         log_error("error creating HDF5 file");
     }
     node_free(file);
+    rc = EXIT_SUCCESS;
 
 end:
     if (options->input) {
         fclose(yyin);
     }
     opt_free(options);
-    return EXIT_SUCCESS;
+    return rc;
 }
