@@ -33,11 +33,15 @@ extern char *unquote(const char *);
 
 "{" |
 "}"                     { return yytext[0]; }
-\"([^"\\]|\\['"])*\"    { yylval.string = unquote(yytext); return IDENTIFIER; }
-\n                      { /* ignore newline */ }
-[ \t]                   { /* ignore whitespace */ }
 "HDF5"                  { return HDF5; }
 "GROUP"                 { return GROUP; }
+"DATATYPE"              { return DATATYPE; }
+"DATASPACE"             { return DATASPACE; }
+"DATASET"               { return DATASET; }
+\"([^"\\]|\\['"])*\"    { yylval.string = unquote(yytext); return QUOTED_STRING; }
+[_a-zA-Z][_a-zA-Z0-9]*  { yylval.string = strdup(yytext); return IDENTIFIER; }
+\n                      /* ignore newline */
+[ \t]                   /* ignore whitespace */
 .                       { yyerror("Mystery character %c\n", *yytext); }
 
 %%

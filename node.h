@@ -28,7 +28,10 @@ typedef struct nodelist_t nodelist_t;
 
 typedef enum {
     NODE_FILE,
-    NODE_GROUP
+    NODE_GROUP,
+    NODE_DATATYPE,
+    NODE_DATASPACE,
+    NODE_DATASET
 } node_type_t;
 
 typedef struct node_t {
@@ -44,6 +47,19 @@ typedef struct node_t {
             char       *name;
             nodelist_t *members;
         } group;
+
+        struct {
+            char *name;
+        } datatype;
+
+        struct {
+            char *type;
+        } dataspace;
+
+        struct {
+            char       *name;
+            nodelist_t *info;
+        } dataset;
     } u;
 } node_t;
 
@@ -52,6 +68,9 @@ extern node_t *file;
 
 extern node_t *node_new_file(char *name, node_t *root_group);
 extern node_t *node_new_group(char *name, nodelist_t *members);
+extern node_t *node_new_datatype(char *name);
+extern node_t *node_new_dataspace(char *type);
+extern node_t *node_new_dataset(char *name, nodelist_t *info);
 extern void    node_free(node_t *node);
 extern int     node_create(node_t *node, node_t *parent, opt_t *options);
 
@@ -61,8 +80,13 @@ typedef struct nodelist_t {
     node_t     *node;
 } nodelist_t;
 
+typedef int nodelist_find_t(nodelist_t *el, void *userdata);
+
 extern nodelist_t *nodelist_prepend(nodelist_t *list, node_t *node);
 extern void        nodelist_free(nodelist_t *list);
 extern nodelist_t *nodelist_reverse(nodelist_t *list);
+extern nodelist_t *nodelist_find(nodelist_t *list, nodelist_find_t *func, void *userdata);
+
+int nodelist_find_node_by_type(nodelist_t *el, void *userdata);
 
 #endif /* NODE_H_INCLUDED */

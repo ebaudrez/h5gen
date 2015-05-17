@@ -28,19 +28,36 @@
     nodelist_t *list;
 }
 
-%token HDF5 GROUP
-%token <string> IDENTIFIER
-%type <node> file group
+%token HDF5 GROUP DATATYPE DATASPACE DATASET
+%token <string> QUOTED_STRING IDENTIFIER
 %type <list> member_list
+%type <node> member file group datatype dataspace dataset
+
+%start file
 
 %%
 
-file        : HDF5 IDENTIFIER '{' group '}' { file = node_new_file($2, $4); }
+member_list : /* empty */         { $$ = NULL; }
+            | member_list member  { $$ = nodelist_prepend($1, $2); }
             ;
 
-group       : GROUP IDENTIFIER '{' member_list '}' { $$ = node_new_group($2, $4); }
+member      : group
+            | datatype
+            | dataspace
+            | dataset
             ;
 
-member_list : /* empty */ { $$ = NULL; }
-            | member_list group { $$ = nodelist_prepend($1, $2); }
+file        : HDF5 QUOTED_STRING '{' group '}' { file = node_new_file($2, $4); }
+            ;
+
+group       : GROUP QUOTED_STRING '{' member_list '}' { $$ = node_new_group($2, $4); }
+            ;
+
+datatype    : DATATYPE IDENTIFIER { $$ = node_new_datatype($2); }
+            ;
+
+dataspace   : DATASPACE IDENTIFIER { $$ = node_new_dataspace($2); }
+            ;
+
+dataset     : DATASET QUOTED_STRING '{' member_list '}' { $$ = node_new_dataset($2, $4); }
             ;
