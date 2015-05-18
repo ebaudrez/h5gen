@@ -9,6 +9,7 @@ AM_INIT_AUTOMAKE([foreign])
 AM_SILENT_RULES
 
 # Checks for programs.
+AC_PROG_AWK
 AC_PROG_CC
 AM_PROG_LEX
 AC_PROG_YACC

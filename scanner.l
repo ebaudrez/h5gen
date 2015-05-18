@@ -31,6 +31,7 @@ extern char *unquote(const char *);
 
 %%
 
+"//".*\n                /* ignore C++-style comments */
 "{" |
 "}"                     { return yytext[0]; }
 "HDF5"                  { return HDF5; }

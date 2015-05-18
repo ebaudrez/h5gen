@@ -28,7 +28,10 @@ do
     h5="${basename%.ddl}.h5"
     ./h5gen -o "$h5" $ddl || ok=n
     if test $ok = y; then
-        @H5DUMP@ "$h5" | @DIFF@ -w - "$ddl" || ok=n
+        scratch=`mktemp`
+        @AWK@ -e '/^[ \t]*\/\// {next} 1' "$ddl" > "$scratch"
+        @H5DUMP@ "$h5" | @DIFF@ -b - "$scratch" || ok=n
+        rm -f "$scratch"
     fi
     rm -f "$h5"
     if test $ok = n; then
