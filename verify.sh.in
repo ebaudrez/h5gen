@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with h5gen; if not, see <http://www.gnu.org/licenses/>.
+failed=0
 for ddl in @srcdir@/*.ddl
 do
     ok=y
@@ -24,7 +25,10 @@ do
         @H5DUMP@ "$h5" | @DIFF@ -w - "$ddl" || ok=n
     fi
     rm -f "$h5"
-    test $ok = n && printf "not "
+    if test $ok = n; then
+        failed=`expr $failed + 1`
+        printf "not "
+    fi
     printf "ok - $basename\n"
-    test $ok = n && exit 1
 done
+exit $failed
