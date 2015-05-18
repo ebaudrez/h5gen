@@ -16,9 +16,15 @@
 # with h5gen; if not, see <http://www.gnu.org/licenses/>.
 for ddl in @srcdir@/*.ddl
 do
+    ok=y
     basename=`basename $ddl`
     h5="${basename%.ddl}.h5"
-    ./h5gen -o "$h5" $ddl || exit
-    @H5DUMP@ "$h5" | @DIFF@ -w - "$ddl" || exit
+    ./h5gen -o "$h5" $ddl || ok=n
+    if test $ok = y; then
+        @H5DUMP@ "$h5" | @DIFF@ -w - "$ddl" || ok=n
+    fi
     rm -f "$h5"
+    test $ok = n && printf "not "
+    printf "ok - $basename\n"
+    test $ok = n && exit 1
 done
