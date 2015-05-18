@@ -42,7 +42,7 @@ extern char *unquote(const char *);
 [_a-zA-Z][_a-zA-Z0-9]*  { yylval.string = strdup(yytext); return IDENTIFIER; }
 \n                      /* ignore newline */
 [ \t]                   /* ignore whitespace */
-.                       { yyerror("Mystery character %c\n", *yytext); }
+.                       { yyerror("Mystery character %c", *yytext); }
 
 %%
 
