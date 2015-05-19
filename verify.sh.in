@@ -14,6 +14,10 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with h5gen; if not, see <http://www.gnu.org/licenses/>.
+function fetch_opt {
+    @AWK@ -e '/^##/ { if (sub("^##[ \t]*" var "[ \t]*=[ \t]*", "")) print }' var="$1" "$2"
+}
+
 failed=0
 counter=0
 # count files - solution courtesy of http://unix.stackexchange.com/a/90152/65370
@@ -29,8 +33,9 @@ do
     ./h5gen -o "$h5" $ddl || ok=n
     if test $ok = y; then
         scratch=`mktemp`
+        h5dump_opt=`fetch_opt h5dump_opt "$ddl"`
         @AWK@ -e '/^[ \t]*#/ {next} 1' "$ddl" > "$scratch"
-        @H5DUMP@ "$h5" | @DIFF@ -b - "$scratch" || ok=n
+        @H5DUMP@ $h5dump_opt "$h5" | @DIFF@ -b - "$scratch" || ok=n
         rm -f "$scratch"
     fi
     rm -f "$h5"

@@ -1,3 +1,4 @@
+## h5dump_opt = -H
 HDF5 "test06.h5" {
 GROUP "/" {
     DATASET "dset" {
