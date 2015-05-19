@@ -29,7 +29,7 @@ do
     ./h5gen -o "$h5" $ddl || ok=n
     if test $ok = y; then
         scratch=`mktemp`
-        @AWK@ -e '/^[ \t]*\/\// {next} 1' "$ddl" > "$scratch"
+        @AWK@ -e '/^[ \t]*#/ {next} 1' "$ddl" > "$scratch"
         @H5DUMP@ "$h5" | @DIFF@ -b - "$scratch" || ok=n
         rm -f "$scratch"
     fi
