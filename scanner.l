@@ -29,9 +29,15 @@
 extern char *unquote(const char *);
 %}
 
+%s IN_DATA
+
 %%
 
 ^[ \t]*#.*\n            /* ignore shell-style comments */
+<IN_DATA>"}"            { BEGIN INITIAL; return yytext[0]; }
+    /* next rule serves to ignore the index lists that h5dump helpfully inserts
+     * before each row of data */
+<IN_DATA>^[ \t]*\([ \t]*[0-9]+[ \t]*(,[ \t]*[0-9]+[ \t]*)*\)[ \t]*:
 "{" |
 "}"                     { return yytext[0]; }
 "HDF5"                  { return HDF5; }
@@ -39,7 +45,7 @@ extern char *unquote(const char *);
 "DATATYPE"              { return DATATYPE; }
 "DATASPACE"             { return DATASPACE; }
 "DATASET"               { return DATASET; }
-"DATA"                  { return DATA; }
+"DATA"                  { BEGIN IN_DATA; return DATA; }
 -?[0-9]+                { yylval.integer = atoi(yytext); return INTEGER; }
 \"([^"\\]|\\['"])*\"    { yylval.string = unquote(yytext); return QUOTED_STRING; }
 [_a-zA-Z][_a-zA-Z0-9]*  { yylval.string = strdup(yytext); return IDENTIFIER; }
