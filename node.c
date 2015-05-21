@@ -75,6 +75,17 @@ node_new_dataspace(char *type)
 }
 
 node_t *
+node_new_data(nodelist_t *values)
+{
+    node_t *node;
+    assert(node = malloc(sizeof *node));
+    node->type = NODE_DATA;
+    node->id = -1;
+    node->u.data.values = nodelist_reverse(values);
+    return node;
+}
+
+node_t *
 node_new_dataset(char *name, nodelist_t *info)
 {
     node_t *node;
@@ -83,6 +94,17 @@ node_new_dataset(char *name, nodelist_t *info)
     node->id = -1;
     node->u.dataset.name = name;
     node->u.dataset.info = info; /* no need to reverse */
+    return node;
+}
+
+node_t *
+node_new_integer(int value)
+{
+    node_t *node;
+    assert(node = malloc(sizeof *node));
+    node->type = NODE_INTEGER;
+    node->id = -1;
+    node->u.integer.value = value;
     return node;
 }
 
@@ -109,9 +131,16 @@ node_free(node_t *node)
             free(node->u.dataspace.type);
             break;
 
+        case NODE_DATA:
+            nodelist_free(node->u.data.values);
+            break;
+
         case NODE_DATASET:
             free(node->u.dataset.name);
             nodelist_free(node->u.dataset.info);
+            break;
+
+        case NODE_INTEGER:
             break;
 
         default:
@@ -289,12 +318,44 @@ node_create_dataspace(node_t *node, node_t *parent, opt_t *options)
     return 0;
 }
 
+static void *
+prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_id, opt_t *options)
+{
+    node_t *first_val;
+    hsize_t n;
+    size_t sz;
+    void *buf;
+    assert(datatype);
+    assert(dataspace);
+    assert(data);
+    assert(mem_type_id);
+    assert(strcmp(dataspace->u.dataspace.type, "SCALAR") == 0);
+    n = 1;
+    assert(first_val = data->u.data.values->node);
+    switch (first_val->type) {
+        case NODE_INTEGER:
+            *mem_type_id = H5T_NATIVE_INT;
+            sz = sizeof(int);
+            break;
+
+        default:
+            log_error("cannot obtain size for value type %d", first_val->type);
+            return NULL;
+    }
+    assert(n * sz > 0);
+    assert(buf = malloc(n * sz));
+    *(int *) buf = first_val->u.integer.value;
+    return buf;
+}
+
 static int
 node_create_dataset(node_t *node, node_t *parent, opt_t *options)
 {
     node_type_t type;
-    nodelist_t *p_datatype, *p_dataspace;
-    node_t *datatype, *dataspace;
+    nodelist_t *p_datatype, *p_dataspace, *p_data;
+    node_t *datatype, *dataspace, *data;
+    hid_t mem_type_id;
+    void *buf;
     herr_t err;
 
     assert(node);
@@ -327,7 +388,23 @@ node_create_dataset(node_t *node, node_t *parent, opt_t *options)
     if (err < 0) return err;
     node->id = H5Dcreate(parent->id, node->u.dataset.name, datatype->id, dataspace->id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     if (node->id < 0) return -1;
-    /* TODO write data! */
+    /* TODO begin offload */
+    type = NODE_DATA;
+    if (!(p_data = nodelist_find(node->u.dataset.info, nodelist_find_node_by_type, &type))) {
+        log_warn("dataset %s does not have data", node->u.dataset.name);
+        /* FIXME memory leak because resources not closed properly */
+        return 0;
+    }
+    if (nodelist_find(p_data->next, nodelist_find_node_by_type, &type)) {
+        log_error("dataset %s has more than one list of data values", node->u.dataset.name);
+        return -1;
+    }
+    data = p_data->node;
+    /* TODO end offload */
+    buf = prepare_data(datatype, dataspace, data, &mem_type_id, options);
+    err = H5Dwrite(node->id, mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf);
+    free(buf);
+    if (err < 0) return err;
     err = H5Dclose(node->id);
     if (err < 0) return err;
     err = H5Sclose(dataspace->id);
@@ -358,7 +435,7 @@ node_create(node_t *node, node_t *parent, opt_t *options)
             return node_create_dataset(node, parent, options);
 
         default:
-            log_error("cannot write a node of type %d", node->type);
+            log_error("cannot create a node of type %d", node->type);
             assert(0);
     }
 }

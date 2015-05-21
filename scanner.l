@@ -39,6 +39,8 @@ extern char *unquote(const char *);
 "DATATYPE"              { return DATATYPE; }
 "DATASPACE"             { return DATASPACE; }
 "DATASET"               { return DATASET; }
+"DATA"                  { return DATA; }
+-?[0-9]+                { yylval.integer = atoi(yytext); return INTEGER; }
 \"([^"\\]|\\['"])*\"    { yylval.string = unquote(yytext); return QUOTED_STRING; }
 [_a-zA-Z][_a-zA-Z0-9]*  { yylval.string = strdup(yytext); return IDENTIFIER; }
 \n                      /* ignore newline */

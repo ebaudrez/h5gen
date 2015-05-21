@@ -26,12 +26,14 @@
     char       *string;
     node_t     *node;
     nodelist_t *list;
+    int         integer;
 }
 
-%token HDF5 GROUP DATATYPE DATASPACE DATASET
+%token HDF5 GROUP DATATYPE DATASPACE DATA DATASET
+%token <integer> INTEGER
 %token <string> QUOTED_STRING IDENTIFIER
-%type <list> member_list
-%type <node> member file group datatype dataspace dataset
+%type <list> member_list value_list
+%type <node> member value file group datatype dataspace data dataset
 
 %start file
 
@@ -45,6 +47,14 @@ member      : group
             | datatype
             | dataspace
             | dataset
+            | data
+            ;
+
+value_list  : value                { $$ = nodelist_prepend(NULL, $1); }
+            | value_list ',' value { $$ = nodelist_prepend($1, $3); }
+            ;
+
+value       : INTEGER { $$ = node_new_integer($1); }
             ;
 
 file        : HDF5 QUOTED_STRING '{' group '}' { file = node_new_file($2, $4); }
@@ -57,6 +67,9 @@ datatype    : DATATYPE IDENTIFIER { $$ = node_new_datatype($2); }
             ;
 
 dataspace   : DATASPACE IDENTIFIER { $$ = node_new_dataspace($2); }
+            ;
+
+data        : DATA '{' value_list '}' { $$ = node_new_data($3); }
             ;
 
 dataset     : DATASET QUOTED_STRING '{' member_list '}' { $$ = node_new_dataset($2, $4); }
