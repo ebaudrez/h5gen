@@ -33,7 +33,8 @@ typedef enum {
     NODE_DATASPACE,
     NODE_DATA,
     NODE_DATASET,
-    NODE_INTEGER
+    NODE_INTEGER,
+    NODE_REALNUM
 } node_type_t;
 
 typedef struct node_t {
@@ -70,6 +71,10 @@ typedef struct node_t {
         struct {
             int value;
         } integer;
+
+        struct {
+            double value;
+        } realnum;
     } u;
 } node_t;
 
@@ -83,6 +88,7 @@ extern node_t *node_new_dataspace(char *type);
 extern node_t *node_new_data(nodelist_t *values);
 extern node_t *node_new_dataset(char *name, nodelist_t *info);
 extern node_t *node_new_integer(int value);
+extern node_t *node_new_realnum(double value);
 extern void    node_free(node_t *node);
 extern int     node_create(node_t *node, node_t *parent, opt_t *options);
 

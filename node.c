@@ -108,6 +108,17 @@ node_new_integer(int value)
     return node;
 }
 
+node_t *
+node_new_realnum(double value)
+{
+    node_t *node;
+    assert(node = malloc(sizeof *node));
+    node->type = NODE_REALNUM;
+    node->id = -1;
+    node->u.realnum.value = value;
+    return node;
+}
+
 void
 node_free(node_t *node)
 {
@@ -141,6 +152,9 @@ node_free(node_t *node)
             break;
 
         case NODE_INTEGER:
+            break;
+
+        case NODE_REALNUM:
             break;
 
         default:
@@ -338,13 +352,31 @@ prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_
             sz = sizeof(int);
             break;
 
+        case NODE_REALNUM:
+            *mem_type_id = H5T_NATIVE_DOUBLE;
+            sz = sizeof(double);
+            break;
+
         default:
             log_error("cannot obtain size for value type %d", first_val->type);
             return NULL;
     }
     assert(n * sz > 0);
     assert(buf = malloc(n * sz));
-    *(int *) buf = first_val->u.integer.value;
+    switch (first_val->type) {
+        case NODE_INTEGER:
+            *(int *) buf = first_val->u.integer.value;
+            break;
+
+        case NODE_REALNUM:
+            *(double *) buf = first_val->u.realnum.value;
+            break;
+
+        default:
+            log_error("cannot write type %d to buffer", first_val->type);
+            free(buf);
+            return NULL;
+    }
     return buf;
 }
 

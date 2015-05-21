@@ -27,10 +27,12 @@
     node_t     *node;
     nodelist_t *list;
     int         integer;
+    double      realnum;
 }
 
 %token HDF5 GROUP DATATYPE DATASPACE DATA DATASET
 %token <integer> INTEGER
+%token <realnum> REALNUM
 %token <string> QUOTED_STRING IDENTIFIER
 %type <list> member_list value_list
 %type <node> member value file group datatype dataspace data dataset
@@ -55,6 +57,7 @@ value_list  : value                { $$ = nodelist_prepend(NULL, $1); }
             ;
 
 value       : INTEGER { $$ = node_new_integer($1); }
+            | REALNUM { $$ = node_new_realnum($1); }
             ;
 
 file        : HDF5 QUOTED_STRING '{' group '}' { file = node_new_file($2, $4); }

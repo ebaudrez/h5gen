@@ -31,6 +31,9 @@ extern char *unquote(const char *);
 
 %s IN_DATA
 
+/* real number exponent */
+EXP     ([eE][-+]?[0-9]+)
+
 %%
 
 ^[ \t]*#.*\n            /* ignore shell-style comments */
@@ -47,6 +50,8 @@ extern char *unquote(const char *);
 "DATASET"               { return DATASET; }
 "DATA"                  { BEGIN IN_DATA; return DATA; }
 -?[0-9]+                { yylval.integer = atoi(yytext); return INTEGER; }
+-?([0-9]+\.[0-9]*|\.[0-9]+){EXP}? |
+-?[0-9]+{EXP}           { yylval.realnum = atof(yytext); return REALNUM; }
 \"([^"\\]|\\['"])*\"    { yylval.string = unquote(yytext); return QUOTED_STRING; }
 [_a-zA-Z][_a-zA-Z0-9]*  { yylval.string = strdup(yytext); return IDENTIFIER; }
 \n                      /* ignore newline */
