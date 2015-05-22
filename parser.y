@@ -30,7 +30,7 @@
     double      realnum;
 }
 
-%token HDF5 GROUP DATATYPE DATASPACE DATA DATASET
+%token HDF5 GROUP DATATYPE DATASPACE DATA DATASET SCALAR
 %token <integer> INTEGER
 %token <realnum> REALNUM
 %token <string> QUOTED_STRING IDENTIFIER
@@ -69,7 +69,7 @@ group       : GROUP QUOTED_STRING '{' member_list '}' { $$ = node_new_group($2, 
 datatype    : DATATYPE IDENTIFIER { $$ = node_new_datatype($2); }
             ;
 
-dataspace   : DATASPACE IDENTIFIER { $$ = node_new_dataspace($2); }
+dataspace   : DATASPACE SCALAR { $$ = node_new_dataspace_scalar(); }
             ;
 
 data        : DATA '{' value_list '}' { $$ = node_new_data($3); }

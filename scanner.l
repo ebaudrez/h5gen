@@ -49,6 +49,7 @@ EXP     ([eE][-+]?[0-9]+)
 "DATASPACE"             { return DATASPACE; }
 "DATASET"               { return DATASET; }
 "DATA"                  { BEGIN IN_DATA; return DATA; }
+"SCALAR"                { return SCALAR; }
 -?[0-9]+                { yylval.integer = atoi(yytext); return INTEGER; }
 -?([0-9]+\.[0-9]*|\.[0-9]+){EXP}? |
 -?[0-9]+{EXP}           { yylval.realnum = atof(yytext); return REALNUM; }

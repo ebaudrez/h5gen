@@ -56,7 +56,9 @@ typedef struct node_t {
         } datatype;
 
         struct {
-            char *type;
+            enum {
+                DATASPACE_SCALAR
+            } type;
         } dataspace;
 
         struct {
@@ -84,7 +86,7 @@ extern node_t *file;
 extern node_t *node_new_file(char *name, node_t *root_group);
 extern node_t *node_new_group(char *name, nodelist_t *members);
 extern node_t *node_new_datatype(char *name);
-extern node_t *node_new_dataspace(char *type);
+extern node_t *node_new_dataspace_scalar(void);
 extern node_t *node_new_data(nodelist_t *values);
 extern node_t *node_new_dataset(char *name, nodelist_t *info);
 extern node_t *node_new_integer(int value);

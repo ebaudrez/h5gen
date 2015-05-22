@@ -64,13 +64,13 @@ node_new_datatype(char *name)
 }
 
 node_t *
-node_new_dataspace(char *type)
+node_new_dataspace_scalar(void)
 {
     node_t *node;
     assert(node = malloc(sizeof *node));
     node->type = NODE_DATASPACE;
     node->id = -1;
-    node->u.dataspace.type = type;
+    node->u.dataspace.type = DATASPACE_SCALAR;
     return node;
 }
 
@@ -139,7 +139,6 @@ node_free(node_t *node)
             break;
 
         case NODE_DATASPACE:
-            free(node->u.dataspace.type);
             break;
 
         case NODE_DATA:
@@ -325,7 +324,7 @@ node_create_dataspace(node_t *node, node_t *parent, opt_t *options)
 {
     assert(node);
     assert(node->type == NODE_DATASPACE);
-    assert(strcmp(node->u.dataspace.type, "SCALAR") == 0);
+    assert(node->u.dataspace.type == DATASPACE_SCALAR);
     node->id = H5Screate(H5S_SCALAR);
     if (node->id < 0) return -1;
     /* cannot close dataspace before dataset is written */
@@ -343,7 +342,7 @@ prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_
     assert(dataspace);
     assert(data);
     assert(mem_type_id);
-    assert(strcmp(dataspace->u.dataspace.type, "SCALAR") == 0);
+    assert(dataspace->u.dataspace.type == DATASPACE_SCALAR);
     n = 1;
     assert(first_val = data->u.data.values->node);
     switch (first_val->type) {
