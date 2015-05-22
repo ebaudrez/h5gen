@@ -30,6 +30,7 @@ do
     counter=`expr $counter + 1`
     basename=`basename $ddl`
     h5="${basename%.ddl}.h5"
+    tap_todo=`fetch_opt tap_todo "$ddl"`
     ./h5gen -o "$h5" $ddl || ok=n
     if test $ok = y; then
         scratch=`mktemp`
@@ -39,10 +40,15 @@ do
         rm -f "$scratch"
     fi
     rm -f "$h5"
+    test $ok = n && printf "not "
+    printf "ok $counter - $basename"
     if test $ok = n; then
-        failed=`expr $failed + 1`
-        printf "not "
+        if test "$tap_todo"; then
+            printf " # TODO $tap_todo"
+        else
+            failed=`expr $failed + 1`
+        fi
     fi
-    printf "ok $counter - $basename\n"
+    printf "\n"
 done
 exit $failed
