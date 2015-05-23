@@ -1,3 +1,4 @@
+## tap_testname = dataset creation - scalar dataspace, leading index
 HDF5 "test10.h5" {
 GROUP "/" {
     DATASET "dset" {

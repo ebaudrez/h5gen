@@ -1,3 +1,4 @@
+## tap_testname = dataset creation - scalar dataspace, integral datatype, data != 0
 ## h5dump_opt = -y
 HDF5 "test09.h5" {
 GROUP "/" {

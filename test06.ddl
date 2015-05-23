@@ -1,3 +1,4 @@
+## tap_testname = dataset creation - without data
 ## h5dump_opt = -H
 HDF5 "test06.h5" {
 GROUP "/" {

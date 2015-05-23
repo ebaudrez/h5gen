@@ -1,3 +1,4 @@
+## tap_testname = group creation - nested groups
 HDF5 "test04.h5" {
 GROUP "/" {
     GROUP "abc" {

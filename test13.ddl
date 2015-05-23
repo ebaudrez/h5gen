@@ -1,4 +1,4 @@
-# simple dataspace with floating-point datatype, integer literals
+## tap_testname = dataset creation - simple dataspace with floating-point datatype, integer literals
 HDF5 "test13.h5" {
 GROUP "/" {
     DATASET "def" {

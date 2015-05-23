@@ -1,4 +1,4 @@
-# simple dataspace with integral datatype
+## tap_testname = dataset creation - simple dataspace with integral datatype
 HDF5 "test12.h5" {
 GROUP "/" {
     DATASET "def" {
