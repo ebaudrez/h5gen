@@ -41,8 +41,7 @@ EXP     ([eE][-+]?[0-9]+)
     /* next rule serves to ignore the index lists that h5dump helpfully inserts
      * before each row of data */
 <IN_DATA>^[ \t]*\([ \t]*[0-9]+[ \t]*(,[ \t]*[0-9]+[ \t]*)*\)[ \t]*:
-"{" |
-"}"                     { return yytext[0]; }
+[{}(),/]                { return yytext[0]; }
 "HDF5"                  { return HDF5; }
 "GROUP"                 { return GROUP; }
 "DATATYPE"              { return DATATYPE; }
@@ -50,6 +49,7 @@ EXP     ([eE][-+]?[0-9]+)
 "DATASET"               { return DATASET; }
 "DATA"                  { BEGIN IN_DATA; return DATA; }
 "SCALAR"                { return SCALAR; }
+"SIMPLE"                { return SIMPLE; }
 -?[0-9]+                { yylval.integer = atoi(yytext); return INTEGER; }
 -?([0-9]+\.[0-9]*|\.[0-9]+){EXP}? |
 -?[0-9]+{EXP}           { yylval.realnum = atof(yytext); return REALNUM; }

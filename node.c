@@ -71,6 +71,47 @@ node_new_dataspace_scalar(void)
     node->type = NODE_DATASPACE;
     node->id = -1;
     node->u.dataspace.type = DATASPACE_SCALAR;
+    node->u.dataspace.rank = 0;
+    node->u.dataspace.cur_dims = NULL;
+    node->u.dataspace.max_dims = NULL;
+    return node;
+}
+
+node_t *
+node_new_dataspace_simple(nodelist_t *cur_dims, nodelist_t *max_dims)
+{
+    node_t *node;
+    int rank;
+    nodelist_t *src;
+    hsize_t *dst;
+
+    assert(cur_dims);
+    assert(max_dims);
+    assert(node = malloc(sizeof *node));
+    node->type = NODE_DATASPACE;
+    node->id = -1;
+    node->u.dataspace.type = DATASPACE_SIMPLE;
+    rank = nodelist_length(cur_dims);
+    assert(nodelist_length(max_dims) == rank);
+    node->u.dataspace.rank = rank;
+    /* copy cur_dims */
+    src = cur_dims;
+    assert(dst = node->u.dataspace.cur_dims = malloc(rank * sizeof(hsize_t)));
+    while (src) {
+        assert(src->node->type == NODE_INTEGER);
+        *dst++ = src->node->u.integer.value;
+        src = src->next;
+    }
+    nodelist_free(cur_dims);
+    /* copy max_dims */
+    src = max_dims;
+    assert(dst = node->u.dataspace.max_dims = malloc(rank * sizeof(hsize_t)));
+    while (src) {
+        assert(src->node->type == NODE_INTEGER);
+        *dst++ = src->node->u.integer.value;
+        src = src->next;
+    }
+    nodelist_free(max_dims);
     return node;
 }
 
@@ -139,6 +180,8 @@ node_free(node_t *node)
             break;
 
         case NODE_DATASPACE:
+            free(node->u.dataspace.cur_dims);
+            free(node->u.dataspace.max_dims);
             break;
 
         case NODE_DATA:
@@ -324,13 +367,36 @@ node_create_dataspace(node_t *node, node_t *parent, opt_t *options)
 {
     assert(node);
     assert(node->type == NODE_DATASPACE);
-    assert(node->u.dataspace.type == DATASPACE_SCALAR);
-    node->id = H5Screate(H5S_SCALAR);
+    switch (node->u.dataspace.type) {
+        case DATASPACE_SCALAR:
+            node->id = H5Screate(H5S_SCALAR);
+            break;
+
+        case DATASPACE_SIMPLE:
+            node->id = H5Screate_simple(node->u.dataspace.rank,
+                    node->u.dataspace.cur_dims, node->u.dataspace.max_dims);
+            break;
+
+        default:
+            log_error("cannot create a dataspace of type %d", node->u.dataspace.type);
+            return -1;
+    }
     if (node->id < 0) return -1;
     /* cannot close dataspace before dataset is written */
     return 0;
 }
 
+#define COPY_DATA_FROM_NODELIST(src_, dst_, dtype, ntype, field, n) do { \
+    nodelist_t *src = (src_); \
+    dtype *dst = (dst_), *start = (dst_); \
+    while (src) { \
+        assert(src->node->type == (ntype)); \
+        assert(dst - start < (n)); /* guard against buffer overrun */ \
+        *dst++ = src->node->u.field.value; \
+        src = src->next; \
+    } \
+    assert(dst - start == (n)); /* check that all values were supplied */ \
+} while (0)
 static void *
 prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_id, opt_t *options)
 {
@@ -342,8 +408,25 @@ prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_
     assert(dataspace);
     assert(data);
     assert(mem_type_id);
-    assert(dataspace->u.dataspace.type == DATASPACE_SCALAR);
-    n = 1;
+    switch (dataspace->u.dataspace.type) {
+        case DATASPACE_SCALAR:
+            n = 1;
+            break;
+
+        case DATASPACE_SIMPLE:
+            n = 1;
+            {
+                int r, rank = dataspace->u.dataspace.rank;
+                for (r = 0; r < rank; r++) {
+                    n *= dataspace->u.dataspace.cur_dims[r];
+                }
+            }
+            break;
+
+        default:
+            log_error("cannot prepare data for a dataspace of type %d", dataspace->u.dataspace.type);
+            return -1;
+    }
     assert(first_val = data->u.data.values->node);
     switch (first_val->type) {
         case NODE_INTEGER:
@@ -364,11 +447,11 @@ prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_
     assert(buf = malloc(n * sz));
     switch (first_val->type) {
         case NODE_INTEGER:
-            *(int *) buf = first_val->u.integer.value;
+            COPY_DATA_FROM_NODELIST(data->u.data.values, buf, int, first_val->type, integer, n);
             break;
 
         case NODE_REALNUM:
-            *(double *) buf = first_val->u.realnum.value;
+            COPY_DATA_FROM_NODELIST(data->u.data.values, buf, double, first_val->type, realnum, n);
             break;
 
         default:
@@ -378,6 +461,7 @@ prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_
     }
     return buf;
 }
+#undef COPY_DATA_FROM_NODELIST
 
 static int
 node_create_dataset(node_t *node, node_t *parent, opt_t *options)
@@ -488,6 +572,15 @@ nodelist_free(nodelist_t *list)
 {
     if (!list) return;
     SGLIB_LIST_MAP_ON_ELEMENTS(nodelist_t, list, p, next, (node_free(p->node), free(p)));
+}
+
+size_t
+nodelist_length(nodelist_t *list)
+{
+    size_t result;
+    if (!list) return 0;
+    SGLIB_LIST_LEN(nodelist_t, list, next, result);
+    return result;
 }
 
 nodelist_t *

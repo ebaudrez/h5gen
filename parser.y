@@ -30,11 +30,11 @@
     double      realnum;
 }
 
-%token HDF5 GROUP DATATYPE DATASPACE DATA DATASET SCALAR
+%token HDF5 GROUP DATATYPE DATASPACE DATA DATASET SCALAR SIMPLE
 %token <integer> INTEGER
 %token <realnum> REALNUM
 %token <string> QUOTED_STRING IDENTIFIER
-%type <list> member_list value_list
+%type <list> member_list value_list par_value_list
 %type <node> member value file group datatype dataspace data dataset
 
 %start file
@@ -56,6 +56,8 @@ value_list  : value                { $$ = nodelist_prepend(NULL, $1); }
             | value_list ',' value { $$ = nodelist_prepend($1, $3); }
             ;
 
+par_value_list : '(' value_list ')' { $$ = $2; }
+
 value       : INTEGER { $$ = node_new_integer($1); }
             | REALNUM { $$ = node_new_realnum($1); }
             ;
@@ -69,7 +71,8 @@ group       : GROUP QUOTED_STRING '{' member_list '}' { $$ = node_new_group($2, 
 datatype    : DATATYPE IDENTIFIER { $$ = node_new_datatype($2); }
             ;
 
-dataspace   : DATASPACE SCALAR { $$ = node_new_dataspace_scalar(); }
+dataspace   : DATASPACE SCALAR                                           { $$ = node_new_dataspace_scalar(); }
+            | DATASPACE SIMPLE '{' par_value_list '/' par_value_list '}' { $$ = node_new_dataspace_simple($4, $6); }
             ;
 
 data        : DATA '{' value_list '}' { $$ = node_new_data($3); }

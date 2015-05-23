@@ -57,8 +57,12 @@ typedef struct node_t {
 
         struct {
             enum {
-                DATASPACE_SCALAR
+                DATASPACE_SCALAR,
+                DATASPACE_SIMPLE
             } type;
+            int      rank;
+            hsize_t *cur_dims;
+            hsize_t *max_dims;
         } dataspace;
 
         struct {
@@ -87,6 +91,7 @@ extern node_t *node_new_file(char *name, node_t *root_group);
 extern node_t *node_new_group(char *name, nodelist_t *members);
 extern node_t *node_new_datatype(char *name);
 extern node_t *node_new_dataspace_scalar(void);
+extern node_t *node_new_dataspace_simple(nodelist_t *cur_dims, nodelist_t *max_dims);
 extern node_t *node_new_data(nodelist_t *values);
 extern node_t *node_new_dataset(char *name, nodelist_t *info);
 extern node_t *node_new_integer(int value);
@@ -104,6 +109,7 @@ typedef int nodelist_find_t(nodelist_t *el, void *userdata);
 
 extern nodelist_t *nodelist_prepend(nodelist_t *list, node_t *node);
 extern void        nodelist_free(nodelist_t *list);
+extern size_t      nodelist_length(nodelist_t *list);
 extern nodelist_t *nodelist_reverse(nodelist_t *list);
 extern nodelist_t *nodelist_find(nodelist_t *list, nodelist_find_t *func, void *userdata);
 
