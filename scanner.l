@@ -25,8 +25,6 @@
 #include "parser.h"
 #include <string.h>
 #include <assert.h>
-
-extern char *unquote(const char *);
 %}
 
 %s IN_DATA
@@ -53,21 +51,10 @@ EXP     ([eE][-+]?[0-9]+)
 -?[0-9]+                { yylval.integer = atoi(yytext); return INTEGER; }
 -?([0-9]+\.[0-9]*|\.[0-9]+){EXP}? |
 -?[0-9]+{EXP}           { yylval.realnum = atof(yytext); return REALNUM; }
-\"([^"\\]|\\['"])*\"    { yylval.string = unquote(yytext); return QUOTED_STRING; }
+\"([^"\\]|\\['"])*\"    { yylval.string = strdup(yytext + 1);
+                          yylval.string[yyleng - 2] = '\0';
+                          return QUOTED_STRING; }
 [_a-zA-Z][_a-zA-Z0-9]*  { yylval.string = strdup(yytext); return IDENTIFIER; }
 \n                      /* ignore newline */
 [ \t]                   /* ignore whitespace */
 .                       { yyerror("Mystery character %c", *yytext); }
-
-%%
-
-char *
-unquote(const char *s)
-{
-    char *res, *p;
-    assert(s && *s++ == '"');
-    res = strdup(s);
-    assert(p = strrchr(res, '"'));
-    *p = '\0';
-    return res;
-}
