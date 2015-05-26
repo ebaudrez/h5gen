@@ -34,27 +34,39 @@ EXP     ([eE][-+]?[0-9]+)
 
 %%
 
+    /* comments */
 ^[ \t]*#.*\n            /* ignore shell-style comments */
-<IN_DATA>"}"            { BEGIN INITIAL; return yytext[0]; }
-    /* next rule serves to ignore the index lists that h5dump helpfully inserts
+
+    /* ignore the index lists that h5dump helpfully inserts
      * before each row of data */
+<IN_DATA>"}"            { BEGIN INITIAL; return yytext[0]; }
 <IN_DATA>^[ \t]*\([ \t]*[0-9]+[ \t]*(,[ \t]*[0-9]+[ \t]*)*\)[ \t]*:
+
+    /* one-character tokens */
 [{}(),/]                { return yytext[0]; }
-"HDF5"                  { return HDF5; }
-"GROUP"                 { return GROUP; }
-"DATATYPE"              { return DATATYPE; }
-"DATASPACE"             { return DATASPACE; }
-"DATASET"               { return DATASET; }
+
+    /* keywords */
 "DATA"                  { BEGIN IN_DATA; return DATA; }
+"DATASET"               { return DATASET; }
+"DATASPACE"             { return DATASPACE; }
+"DATATYPE"              { return DATATYPE; }
+"GROUP"                 { return GROUP; }
+"HDF5"                  { return HDF5; }
 "SCALAR"                { return SCALAR; }
 "SIMPLE"                { return SIMPLE; }
+
+    /* numbers */
 -?[0-9]+                { yylval.integer = atoi(yytext); return INTEGER; }
 -?([0-9]+\.[0-9]*|\.[0-9]+){EXP}? |
 -?[0-9]+{EXP}           { yylval.realnum = atof(yytext); return REALNUM; }
+
+    /* strings and identifiers */
 \"([^"\\]|\\['"])*\"    { yylval.string = strdup(yytext + 1);
                           yylval.string[yyleng - 2] = '\0';
                           return QUOTED_STRING; }
 [_a-zA-Z][_a-zA-Z0-9]*  { yylval.string = strdup(yytext); return IDENTIFIER; }
+
+    /* other */
 \n                      /* ignore newline */
 [ \t]                   /* ignore whitespace */
 .                       { yyerror("Mystery character %c", *yytext); }

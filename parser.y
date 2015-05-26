@@ -30,12 +30,32 @@
     double      realnum;
 }
 
-%token HDF5 GROUP DATATYPE DATASPACE DATA DATASET SCALAR SIMPLE
+/* tokens */
+%token DATA
+%token DATASET
+%token DATASPACE
+%token DATATYPE
+%token GROUP
+%token HDF5
+%token <string> IDENTIFIER
 %token <integer> INTEGER
+%token <string> QUOTED_STRING
 %token <realnum> REALNUM
-%token <string> QUOTED_STRING IDENTIFIER
-%type <list> member_list value_list par_value_list
-%type <node> member value file group datatype dataspace data dataset
+%token SCALAR
+%token SIMPLE
+
+/* nonterminals */
+%type <node> data
+%type <node> dataset
+%type <node> dataspace
+%type <node> datatype
+%type <node> file
+%type <node> group
+%type <node> member
+%type <list> member_list
+%type <list> par_value_list
+%type <node> value
+%type <list> value_list
 
 %start file
 
