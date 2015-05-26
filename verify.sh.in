@@ -34,8 +34,8 @@ do
     if test $ok = y; then
         scratch=`mktemp`
         h5dump_opt=`fetch_opt h5dump_opt "$ddl"`
-        @AWK@ -e '/^[ \t]*#/ {next} 1' "$ddl" > "$scratch"
-        @H5DUMP@ $h5dump_opt "$h5" | @DIFF@ -b - "$scratch" || ok=n
+        ./sanitize < "$ddl" > "$scratch"
+        @H5DUMP@ $h5dump_opt "$h5" | @AWK@ -e '{ sub("^[ \t]*", ""); print }' | @DIFF@ -b - "$scratch" || ok=n
         rm -f "$scratch"
     fi
     rm -f "$h5"

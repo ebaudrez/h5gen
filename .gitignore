@@ -22,6 +22,8 @@ install-sh
 missing
 parser.c
 parser.h
+sanitize
+sanitize.c
 scanner.c
 stamp-h1
 test-driver
