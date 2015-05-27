@@ -298,13 +298,16 @@ node_create_dataspace(node_t *node, node_t *parent, opt_t *options)
     return 0;
 }
 
-#define COPY_DATA_FROM_NODELIST(src_, dst_, dtype, ntype, field, n) do { \
+#define COPY_DATA_FROM_NODELIST(src_, dst_, dtype, n) do { \
     nodelist_t *src = (src_); \
     dtype *dst = (dst_), *start = (dst_); \
     while (src) { \
-        assert(src->node->type == (ntype)); \
         assert(dst - start < (n)); /* guard against buffer overrun */ \
-        *dst++ = src->node->u.field.value; \
+        switch (src->node->type) { \
+            case NODE_INTEGER: *dst++ = src->node->u.integer.value; break; \
+            case NODE_REALNUM: *dst++ = src->node->u.realnum.value; break; \
+            default: log_error("cannot copy data value from node of type %d", src->node->type); break; \
+        } \
         src = src->next; \
     } \
     assert(dst - start == (n)); /* check that all values were supplied */ \
@@ -312,7 +315,7 @@ node_create_dataspace(node_t *node, node_t *parent, opt_t *options)
 static void *
 prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_id, opt_t *options)
 {
-    node_t *first_val;
+    H5T_class_t class;
     hsize_t n;
     size_t sz;
     void *buf;
@@ -337,39 +340,23 @@ prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_
 
         default:
             log_error("cannot prepare data for a dataspace of type %d", dataspace->u.dataspace.type);
-            return -1;
-    }
-    assert(first_val = data->u.data.values->node);
-    switch (first_val->type) {
-        case NODE_INTEGER:
-            *mem_type_id = H5T_NATIVE_INT;
-            sz = sizeof(int);
-            break;
-
-        case NODE_REALNUM:
-            *mem_type_id = H5T_NATIVE_DOUBLE;
-            sz = sizeof(double);
-            break;
-
-        default:
-            log_error("cannot obtain size for value type %d", first_val->type);
             return NULL;
     }
+    class = H5Tget_class(datatype->u.datatype.id);
+    switch (class) {
+        case H5T_INTEGER: *mem_type_id = H5T_NATIVE_INT; break;
+        case H5T_FLOAT: *mem_type_id = H5T_NATIVE_DOUBLE; break;
+        default:
+            log_error("cannot choose a memory datatype for datatype class %d", class);
+            return NULL;
+    }
+    sz = H5Tget_size(*mem_type_id);
     assert(n * sz > 0);
     assert(buf = malloc(n * sz));
-    switch (first_val->type) {
-        case NODE_INTEGER:
-            COPY_DATA_FROM_NODELIST(data->u.data.values, buf, int, first_val->type, integer, n);
-            break;
-
-        case NODE_REALNUM:
-            COPY_DATA_FROM_NODELIST(data->u.data.values, buf, double, first_val->type, realnum, n);
-            break;
-
-        default:
-            log_error("cannot write type %d to buffer", first_val->type);
-            free(buf);
-            return NULL;
+    switch (class) {
+        case H5T_INTEGER: COPY_DATA_FROM_NODELIST(data->u.data.values, buf, int, n); break;
+        case H5T_FLOAT: COPY_DATA_FROM_NODELIST(data->u.data.values, buf, double, n); break;
+        /* 'class' is known to be good, from the switch statement above */
     }
     return buf;
 }
@@ -428,7 +415,7 @@ node_create_dataset(node_t *node, node_t *parent, opt_t *options)
     }
     data = p_data->node;
     /* TODO end offload */
-    buf = prepare_data(datatype, dataspace, data, &mem_type_id, options);
+    assert(buf = prepare_data(datatype, dataspace, data, &mem_type_id, options));
     err = H5Dwrite(node->id, mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf);
     free(buf);
     if (err < 0) return err;
