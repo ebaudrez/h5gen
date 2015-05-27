@@ -102,15 +102,15 @@ extern int     node_create(node_t *node, node_t *parent, opt_t *options);
 /* node lists */
 typedef struct nodelist_t {
     nodelist_t *next;
+    nodelist_t *prev;
     node_t     *node;
 } nodelist_t;
 
 typedef int nodelist_find_t(nodelist_t *el, void *userdata);
 
-extern nodelist_t *nodelist_prepend(nodelist_t *list, node_t *node);
+extern nodelist_t *nodelist_append(nodelist_t *list, node_t *node);
 extern void        nodelist_free(nodelist_t *list);
 extern size_t      nodelist_length(nodelist_t *list);
-extern nodelist_t *nodelist_reverse(nodelist_t *list);
 extern nodelist_t *nodelist_find(nodelist_t *list, nodelist_find_t *func, void *userdata);
 
 int nodelist_find_node_by_type(nodelist_t *el, void *userdata);

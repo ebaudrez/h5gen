@@ -23,7 +23,7 @@
 #include <assert.h>
 #include <string.h>
 #include <hdf5.h>
-#include "sglib.h"
+#include "utlist.h"
 
 /* root node of the tree */
 node_t *file = NULL;
@@ -48,7 +48,7 @@ node_new_group(char *name, nodelist_t *members)
     node->type = NODE_GROUP;
     node->id = -1;
     node->u.group.name = name;
-    node->u.group.members = nodelist_reverse(members);
+    node->u.group.members = members;
     return node;
 }
 
@@ -122,7 +122,7 @@ node_new_data(nodelist_t *values)
     assert(node = malloc(sizeof *node));
     node->type = NODE_DATA;
     node->id = -1;
-    node->u.data.values = nodelist_reverse(values);
+    node->u.data.values = values;
     return node;
 }
 
@@ -134,7 +134,7 @@ node_new_dataset(char *name, nodelist_t *info)
     node->type = NODE_DATASET;
     node->id = -1;
     node->u.dataset.name = name;
-    node->u.dataset.info = info; /* no need to reverse */
+    node->u.dataset.info = info;
     return node;
 }
 
@@ -455,39 +455,33 @@ node_create(node_t *node, node_t *parent, opt_t *options)
 }
 
 nodelist_t *
-nodelist_prepend(nodelist_t *list, node_t *node)
+nodelist_append(nodelist_t *list, node_t *node)
 {
     nodelist_t *el;
     assert(node);
     assert(el = malloc(sizeof *el));
-    el->next = NULL;
     el->node = node;
-    SGLIB_LIST_ADD(nodelist_t, list, el, next);
+    DL_APPEND(list, el);
     return list;
 }
 
 void
 nodelist_free(nodelist_t *list)
 {
-    if (!list) return;
-    SGLIB_LIST_MAP_ON_ELEMENTS(nodelist_t, list, p, next, (node_free(p->node), free(p)));
+    nodelist_t *p, *tmp;
+    DL_FOREACH_SAFE(list, p, tmp) {
+        node_free(p->node);
+        free(p);
+    }
 }
 
 size_t
 nodelist_length(nodelist_t *list)
 {
     size_t result;
-    if (!list) return 0;
-    SGLIB_LIST_LEN(nodelist_t, list, next, result);
+    nodelist_t *p;
+    DL_COUNT(list, p, result);
     return result;
-}
-
-nodelist_t *
-nodelist_reverse(nodelist_t *list)
-{
-    if (!list) return NULL;
-    SGLIB_LIST_REVERSE(nodelist_t, list, next);
-    return list;
 }
 
 nodelist_t *
@@ -495,7 +489,7 @@ nodelist_find(nodelist_t *list, nodelist_find_t *func, void *userdata)
 {
     nodelist_t *el;
     if (!list) return NULL;
-    SGLIB_LIST_FIND_MEMBER(nodelist_t, list, userdata, func, next, el);
+    DL_SEARCH(list, el, userdata, func);
     return el;
 }
 

@@ -63,7 +63,7 @@
 %%
 
 member_list : /* empty */         { $$ = NULL; }
-            | member_list member  { $$ = nodelist_prepend($1, $2); }
+            | member_list member  { $$ = nodelist_append($1, $2); }
             ;
 
 member      : group
@@ -73,8 +73,8 @@ member      : group
             | data
             ;
 
-value_list  : value                { $$ = nodelist_prepend(NULL, $1); }
-            | value_list ',' value { $$ = nodelist_prepend($1, $3); }
+value_list  : value                { $$ = nodelist_append(NULL, $1); }
+            | value_list ',' value { $$ = nodelist_append($1, $3); }
             ;
 
 par_value_list : '(' value_list ')' { $$ = $2; }
