@@ -70,8 +70,10 @@ typedef struct node_t {
         } data;
 
         struct {
-            char       *name;
-            nodelist_t *info;
+            char   *name;
+            node_t *datatype;
+            node_t *dataspace;
+            node_t *data;
         } dataset;
 
         struct {

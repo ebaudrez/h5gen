@@ -134,7 +134,20 @@ node_new_dataset(char *name, nodelist_t *info)
     node->type = NODE_DATASET;
     node->id = -1;
     node->u.dataset.name = name;
-    node->u.dataset.info = info;
+    if (!(node->u.dataset.datatype = nodelist_extract_unique_node_by_type(&info, NODE_DATATYPE))) {
+        log_error("cannot extract datatype from dataset %s", node->u.dataset.name);
+    }
+    if (!(node->u.dataset.dataspace = nodelist_extract_unique_node_by_type(&info, NODE_DATASPACE))) {
+        log_error("cannot extract dataspace from dataset %s", node->u.dataset.name);
+    }
+    /* data is optional! */
+    if (!(node->u.dataset.data = nodelist_extract_unique_node_by_type(&info, NODE_DATA))) {
+        log_warn("cannot extract data from dataset %s", node->u.dataset.name);
+    }
+    if (nodelist_length(info) > 0) {
+        log_warn("%d unrecognized elements in dataset", nodelist_length(info));
+        nodelist_free(info);
+    }
     return node;
 }
 
@@ -189,7 +202,9 @@ node_free(node_t *node)
 
         case NODE_DATASET:
             free(node->u.dataset.name);
-            nodelist_free(node->u.dataset.info);
+            node_free(node->u.dataset.datatype);
+            node_free(node->u.dataset.dataspace);
+            node_free(node->u.dataset.data);
             break;
 
         case NODE_INTEGER:
@@ -365,45 +380,31 @@ prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_
 static int
 node_create_dataset(node_t *node, node_t *parent, opt_t *options)
 {
-    node_t *datatype, *dataspace, *data;
     hid_t mem_type_id;
     void *buf;
     herr_t err;
 
     assert(node);
     assert(node->type == NODE_DATASET);
-    /* TODO this stuff should be offloaded to node_new_dataset() ! */
-    if (!(datatype = nodelist_extract_unique_node_by_type(&node->u.dataset.info, NODE_DATATYPE))) {
-        log_error("cannot extract datatype from dataset %s", node->u.dataset.name);
-        return -1;
-    }
-    if (!(dataspace = nodelist_extract_unique_node_by_type(&node->u.dataset.info, NODE_DATASPACE))) {
-        log_error("cannot extract dataspace from dataset %s", node->u.dataset.name);
-        return -1;
-    }
-    /* TODO end offload */
-    err = node_create_datatype(datatype, node, options);
+    err = node_create_datatype(node->u.dataset.datatype, node, options);
     if (err < 0) return err;
-    err = node_create_dataspace(dataspace, node, options);
+    err = node_create_dataspace(node->u.dataset.dataspace, node, options);
     if (err < 0) return err;
-    node->id = H5Dcreate(parent->id, node->u.dataset.name, datatype->id, dataspace->id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    node->id = H5Dcreate(parent->id, node->u.dataset.name, node->u.dataset.datatype->id,
+            node->u.dataset.dataspace->id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     if (node->id < 0) return -1;
-    /* TODO begin offload */
-    if (!(data = nodelist_extract_unique_node_by_type(&node->u.dataset.info, NODE_DATA))) {
-        log_warn("cannot extract data from dataset %s", node->u.dataset.name);
-        /* FIXME memory leak because resources not closed properly */
-        return 0;
+    if (node->u.dataset.data) {
+        assert(buf = prepare_data(node->u.dataset.datatype, node->u.dataset.dataspace,
+                    node->u.dataset.data, &mem_type_id, options));
+        err = H5Dwrite(node->id, mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf);
+        free(buf);
     }
-    /* TODO end offload */
-    assert(buf = prepare_data(datatype, dataspace, data, &mem_type_id, options));
-    err = H5Dwrite(node->id, mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf);
-    free(buf);
     if (err < 0) return err;
     err = H5Dclose(node->id);
     if (err < 0) return err;
-    err = H5Sclose(dataspace->id);
+    err = H5Sclose(node->u.dataset.dataspace->id);
     if (err < 0) return err;
-    err = H5Tclose(datatype->id);
+    err = H5Tclose(node->u.dataset.datatype->id);
     if (err < 0) return err;
     return 0;
 }
