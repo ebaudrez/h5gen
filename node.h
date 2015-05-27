@@ -111,7 +111,7 @@ typedef int nodelist_find_t(nodelist_t *el, void *userdata);
 extern nodelist_t *nodelist_append(nodelist_t *list, node_t *node);
 extern void        nodelist_free(nodelist_t *list);
 extern size_t      nodelist_length(nodelist_t *list);
-extern nodelist_t *nodelist_find(nodelist_t *list, nodelist_find_t *func, void *userdata);
+extern nodelist_t *nodelist_extract_by_type(nodelist_t **list, node_type_t type);
 
 int nodelist_find_node_by_type(nodelist_t *el, void *userdata);
 

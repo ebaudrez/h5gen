@@ -365,8 +365,7 @@ prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_
 static int
 node_create_dataset(node_t *node, node_t *parent, opt_t *options)
 {
-    node_type_t type;
-    nodelist_t *p_datatype, *p_dataspace, *p_data;
+    nodelist_t *tmp;
     node_t *datatype, *dataspace, *data;
     hid_t mem_type_id;
     void *buf;
@@ -375,26 +374,24 @@ node_create_dataset(node_t *node, node_t *parent, opt_t *options)
     assert(node);
     assert(node->type == NODE_DATASET);
     /* TODO this stuff should be offloaded to node_new_dataset() ! */
-    type = NODE_DATATYPE;
-    if (!(p_datatype = nodelist_find(node->u.dataset.info, nodelist_find_node_by_type, &type))) {
+    if (!(tmp = nodelist_extract_by_type(&node->u.dataset.info, NODE_DATATYPE))) {
         log_error("dataset %s does not have a datatype", node->u.dataset.name);
         return -1;
     }
-    if (nodelist_find(p_datatype->next, nodelist_find_node_by_type, &type)) {
+    if (nodelist_length(tmp) > 1) {
         log_error("dataset %s has more than one datatype", node->u.dataset.name);
         return -1;
     }
-    datatype = p_datatype->node;
-    type = NODE_DATASPACE;
-    if (!(p_dataspace = nodelist_find(node->u.dataset.info, nodelist_find_node_by_type, &type))) {
+    datatype = tmp->node;
+    if (!(tmp = nodelist_extract_by_type(&node->u.dataset.info, NODE_DATASPACE))) {
         log_error("dataset %s does not have a dataspace", node->u.dataset.name);
         return -1;
     }
-    if (nodelist_find(p_dataspace->next, nodelist_find_node_by_type, &type)) {
+    if (nodelist_length(tmp) > 1) {
         log_error("dataset %s has more than one dataspace", node->u.dataset.name);
         return -1;
     }
-    dataspace = p_dataspace->node;
+    dataspace = tmp->node;
     /* TODO end offload */
     err = node_create_datatype(datatype, node, options);
     if (err < 0) return err;
@@ -403,17 +400,16 @@ node_create_dataset(node_t *node, node_t *parent, opt_t *options)
     node->id = H5Dcreate(parent->id, node->u.dataset.name, datatype->id, dataspace->id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     if (node->id < 0) return -1;
     /* TODO begin offload */
-    type = NODE_DATA;
-    if (!(p_data = nodelist_find(node->u.dataset.info, nodelist_find_node_by_type, &type))) {
+    if (!(tmp = nodelist_extract_by_type(&node->u.dataset.info, NODE_DATA))) {
         log_warn("dataset %s does not have data", node->u.dataset.name);
         /* FIXME memory leak because resources not closed properly */
         return 0;
     }
-    if (nodelist_find(p_data->next, nodelist_find_node_by_type, &type)) {
+    if (nodelist_length(tmp) > 1) {
         log_error("dataset %s has more than one list of data values", node->u.dataset.name);
         return -1;
     }
-    data = p_data->node;
+    data = tmp->node;
     /* TODO end offload */
     assert(buf = prepare_data(datatype, dataspace, data, &mem_type_id, options));
     err = H5Dwrite(node->id, mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf);
@@ -485,18 +481,14 @@ nodelist_length(nodelist_t *list)
 }
 
 nodelist_t *
-nodelist_find(nodelist_t *list, nodelist_find_t *func, void *userdata)
+nodelist_extract_by_type(nodelist_t **list, node_type_t type)
 {
-    nodelist_t *el;
-    if (!list) return NULL;
-    DL_SEARCH(list, el, userdata, func);
-    return el;
-}
-
-int
-nodelist_find_node_by_type(nodelist_t *el, void *userdata)
-{
-    node_t *node = el->node;
-    node_type_t type = *(node_type_t *) userdata;
-    return !(node->type == type); /* have to return 0 for equality */
+    nodelist_t *out = NULL, *p;
+    while (1) {
+        DL_SEARCH_SCALAR(*list, p, node->type, type);
+        if (!p) break;
+        DL_DELETE(*list, p);
+        DL_APPEND(out, p);
+    }
+    return out;
 }
