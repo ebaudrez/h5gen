@@ -53,13 +53,13 @@ node_new_group(char *name, nodelist_t *members)
 }
 
 node_t *
-node_new_datatype(char *name)
+node_new_datatype(hid_t id)
 {
     node_t *node;
     assert(node = malloc(sizeof *node));
     node->type = NODE_DATATYPE;
     node->id = -1;
-    node->u.datatype.name = name;
+    node->u.datatype.id = id;
     return node;
 }
 
@@ -176,7 +176,6 @@ node_free(node_t *node)
             break;
 
         case NODE_DATATYPE:
-            free(node->u.datatype.name);
             break;
 
         case NODE_DATASPACE:
@@ -264,99 +263,12 @@ node_create_group(node_t *node, node_t *parent, opt_t *options)
     return 0;
 }
 
-static hid_t
-datatype_id_from_string(const char *name)
-{
-    struct map_t {
-        struct map_t *next;
-        const char   *name;
-        hid_t         dtype_id;
-    };
-    static struct map_t *table = NULL;
-
-    assert(name);
-    if (!table) {
-#define NODE_C_TABLE_ENTRY(type) do { \
-    struct map_t *elem; \
-    assert(elem = malloc(sizeof *elem)); \
-    elem->name = #type; \
-    elem->dtype_id = type; \
-    SGLIB_LIST_ADD(struct map_t, table, elem, next); \
-} while (0)
-        NODE_C_TABLE_ENTRY(H5T_IEEE_F32BE);
-        NODE_C_TABLE_ENTRY(H5T_IEEE_F32LE);
-        NODE_C_TABLE_ENTRY(H5T_IEEE_F64BE);
-        NODE_C_TABLE_ENTRY(H5T_IEEE_F64LE);
-        NODE_C_TABLE_ENTRY(H5T_STD_I8BE);
-        NODE_C_TABLE_ENTRY(H5T_STD_I8LE);
-        NODE_C_TABLE_ENTRY(H5T_STD_I16BE);
-        NODE_C_TABLE_ENTRY(H5T_STD_I16LE);
-        NODE_C_TABLE_ENTRY(H5T_STD_I32BE);
-        NODE_C_TABLE_ENTRY(H5T_STD_I32LE);
-        NODE_C_TABLE_ENTRY(H5T_STD_I64BE);
-        NODE_C_TABLE_ENTRY(H5T_STD_I64LE);
-        NODE_C_TABLE_ENTRY(H5T_STD_U8BE);
-        NODE_C_TABLE_ENTRY(H5T_STD_U8LE);
-        NODE_C_TABLE_ENTRY(H5T_STD_U16BE);
-        NODE_C_TABLE_ENTRY(H5T_STD_U16LE);
-        NODE_C_TABLE_ENTRY(H5T_STD_U32BE);
-        NODE_C_TABLE_ENTRY(H5T_STD_U32LE);
-        NODE_C_TABLE_ENTRY(H5T_STD_U64BE);
-        NODE_C_TABLE_ENTRY(H5T_STD_U64LE);
-        NODE_C_TABLE_ENTRY(H5T_STD_B8BE);
-        NODE_C_TABLE_ENTRY(H5T_STD_B8LE);
-        NODE_C_TABLE_ENTRY(H5T_STD_B16BE);
-        NODE_C_TABLE_ENTRY(H5T_STD_B16LE);
-        NODE_C_TABLE_ENTRY(H5T_STD_B32BE);
-        NODE_C_TABLE_ENTRY(H5T_STD_B32LE);
-        NODE_C_TABLE_ENTRY(H5T_STD_B64BE);
-        NODE_C_TABLE_ENTRY(H5T_STD_B64LE);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_CHAR);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_SCHAR);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_UCHAR);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_SHORT);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_USHORT);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_INT);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_UINT);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_LONG);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_ULONG);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_LLONG);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_ULLONG);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_FLOAT);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_DOUBLE);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_LDOUBLE);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_B8);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_B16);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_B32);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_B64);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_OPAQUE);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_HADDR);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_HSIZE);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_HSSIZE);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_HERR);
-        NODE_C_TABLE_ENTRY(H5T_NATIVE_HBOOL);
-#undef NODE_C_TABLE_ENTRY
-    }
-    struct map_t *result;
-#define NODE_C_TABLE_NAME_COMPARATOR(x, y) strcmp((x)->name, (y))
-    SGLIB_LIST_FIND_MEMBER(struct map_t, table, name, NODE_C_TABLE_NAME_COMPARATOR, next, result);
-#undef NODE_C_TABLE_NAME_COMPARATOR
-    return result ? result->dtype_id : -1;
-}
-
 static int
 node_create_datatype(node_t *node, node_t *parent, opt_t *options)
 {
-    hid_t dtype_id;
-
     assert(node);
     assert(node->type == NODE_DATATYPE);
-    dtype_id = datatype_id_from_string(node->u.datatype.name);
-    if (dtype_id < 0) {
-        log_error("cannot convert type '%s' to ID", node->u.datatype.name);
-        return -1;
-    }
-    node->id = H5Tcopy(dtype_id);
+    node->id = H5Tcopy(node->u.datatype.id);
     if (node->id < 0) return -1;
     /* cannot close datatype before dataset is written */
     return 0;

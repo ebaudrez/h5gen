@@ -28,6 +28,7 @@
     nodelist_t *list;
     int         integer;
     double      realnum;
+    hid_t       id;
 }
 
 /* tokens */
@@ -37,8 +38,8 @@
 %token DATATYPE
 %token GROUP
 %token HDF5
-%token <string> IDENTIFIER
 %token <integer> INTEGER
+%token <id> PREDEF_DATATYPE
 %token <string> QUOTED_STRING
 %token <realnum> REALNUM
 %token SCALAR
@@ -88,7 +89,7 @@ file        : HDF5 QUOTED_STRING '{' group '}' { file = node_new_file($2, $4); }
 group       : GROUP QUOTED_STRING '{' member_list '}' { $$ = node_new_group($2, $4); }
             ;
 
-datatype    : DATATYPE IDENTIFIER { $$ = node_new_datatype($2); }
+datatype    : DATATYPE PREDEF_DATATYPE { $$ = node_new_datatype($2); }
             ;
 
 dataspace   : DATASPACE SCALAR                                           { $$ = node_new_dataspace_scalar(); }

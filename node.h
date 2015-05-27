@@ -52,7 +52,7 @@ typedef struct node_t {
         } group;
 
         struct {
-            char *name;
+            hid_t id;
         } datatype;
 
         struct {
@@ -89,7 +89,7 @@ extern node_t *file;
 
 extern node_t *node_new_file(char *name, node_t *root_group);
 extern node_t *node_new_group(char *name, nodelist_t *members);
-extern node_t *node_new_datatype(char *name);
+extern node_t *node_new_datatype(hid_t id);
 extern node_t *node_new_dataspace_scalar(void);
 extern node_t *node_new_dataspace_simple(nodelist_t *cur_dims, nodelist_t *max_dims);
 extern node_t *node_new_data(nodelist_t *values);
