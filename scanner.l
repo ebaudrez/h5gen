@@ -123,4 +123,4 @@ EXP     ([eE][-+]?[0-9]+)
     /* other */
 \n                      /* ignore newline */
 [ \t]                   /* ignore whitespace */
-.                       { yyerror("Mystery character %c", *yytext); }
+.                       { yyerror("unrecognized character %c", *yytext); }
