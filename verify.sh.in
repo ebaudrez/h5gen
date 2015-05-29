@@ -35,7 +35,11 @@ do
         scratch=`mktemp`
         h5dump_opt=`fetch_opt h5dump_opt "$ddl"`
         ./sanitize < "$ddl" > "$scratch"
-        @H5DUMP@ $h5dump_opt "$h5" | @AWK@ -e '{ sub("^[ \t]*", ""); print }' | @DIFF@ -b - "$scratch" || ok=n
+        @H5DUMP@ $h5dump_opt "$h5" | @AWK@ -e '{
+            sub("^[ \t]*", "");     # remove indentation
+            gsub("\\([ \t]+", "("); # strip whitespace after opening parenthesis
+            gsub("[ \t]+\\)", ")"); # strip whitespace before closing parenthesis
+            print }' | @DIFF@ -b - "$scratch" || ok=n
         rm -f "$scratch"
     fi
     rm -f "$h5"

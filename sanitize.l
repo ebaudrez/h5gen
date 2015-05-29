@@ -41,6 +41,10 @@ EXP     ([eE][-+]?[0-9]+)
     /* remove indentation */
 ^[ \t]+
 
+    /* remove whitespace after opening parenthesis, and before closing parenthesis */
+\([ \t]+                { printf("("); }
+[ \t]+\)                { printf(")"); }
+
     /* intercept strings to avoid unwanted recognition of numbers */
 \"([^"\\]|\\['"])*\"    { printf("%s", yytext); }
 
