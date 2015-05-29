@@ -116,6 +116,4 @@ extern size_t      nodelist_length(nodelist_t *list);
 extern nodelist_t *nodelist_extract_by_type(nodelist_t **list, node_type_t type);
 extern node_t     *nodelist_extract_unique_node_by_type(nodelist_t **list, node_type_t type);
 
-int nodelist_find_node_by_type(nodelist_t *el, void *userdata);
-
 #endif /* NODE_H_INCLUDED */
