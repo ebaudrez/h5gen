@@ -78,6 +78,8 @@ node_new_dataset(char *name, nodelist_t *info)
     if (!(node->u.dataset.dataspace = nodelist_extract_unique_node_by_type(&info, NODE_DATASPACE))) {
         log_error("cannot extract dataspace from dataset %s", node->u.dataset.name);
     }
+    /* attributes are optional */
+    node->u.dataset.attributes = nodelist_extract_by_type(&info, NODE_ATTRIBUTE);
     /* data is optional! */
     if (!(node->u.dataset.data = nodelist_extract_unique_node_by_type(&info, NODE_DATA))) {
         log_warn("cannot extract data from dataset %s", node->u.dataset.name);
@@ -218,6 +220,7 @@ node_free(node_t *node)
             free(node->u.dataset.name);
             node_free(node->u.dataset.datatype);
             node_free(node->u.dataset.dataspace);
+            nodelist_free(node->u.dataset.attributes);
             node_free(node->u.dataset.data);
             break;
 
@@ -364,6 +367,14 @@ node_create_dataset(node_t *node, node_t *parent, opt_t *options)
     node->id = H5Dcreate(parent->id, node->u.dataset.name, node->u.dataset.datatype->id,
             node->u.dataset.dataspace->id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     if (node->id < 0) return -1;
+    if (node->u.dataset.attributes) {
+        nodelist_t *p = node->u.dataset.attributes;
+        while (p) {
+            err = node_create(p->node, node, options);
+            if (err < 0) return err;
+            p = p->next;
+        }
+    }
     if (node->u.dataset.data) {
         assert(buf = prepare_data(node->u.dataset.datatype, node->u.dataset.dataspace,
                     node->u.dataset.data, &mem_type_id, options));

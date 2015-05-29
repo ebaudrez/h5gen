@@ -54,10 +54,11 @@ typedef struct node_t {
         } data;
 
         struct {
-            char   *name;
-            node_t *datatype;
-            node_t *dataspace;
-            node_t *data;
+            char       *name;
+            node_t     *datatype;
+            node_t     *dataspace;
+            nodelist_t *attributes;
+            node_t     *data;
         } dataset;
 
         struct {
