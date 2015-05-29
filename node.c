@@ -29,37 +29,38 @@
 node_t *file = NULL;
 
 node_t *
-node_new_file(char *name, node_t *root_group)
+node_new_data(nodelist_t *values)
 {
     node_t *node;
     assert(node = malloc(sizeof *node));
-    node->type = NODE_FILE;
+    node->type = NODE_DATA;
     node->id = -1;
-    node->u.file.name = name; /* no need to strdup(); storage already allocated by unquote() */
-    node->u.file.root_group = root_group;
+    node->u.data.values = values;
     return node;
 }
 
 node_t *
-node_new_group(char *name, nodelist_t *members)
+node_new_dataset(char *name, nodelist_t *info)
 {
     node_t *node;
     assert(node = malloc(sizeof *node));
-    node->type = NODE_GROUP;
+    node->type = NODE_DATASET;
     node->id = -1;
-    node->u.group.name = name;
-    node->u.group.members = members;
-    return node;
-}
-
-node_t *
-node_new_datatype(hid_t id)
-{
-    node_t *node;
-    assert(node = malloc(sizeof *node));
-    node->type = NODE_DATATYPE;
-    node->id = -1;
-    node->u.datatype.id = id;
+    node->u.dataset.name = name;
+    if (!(node->u.dataset.datatype = nodelist_extract_unique_node_by_type(&info, NODE_DATATYPE))) {
+        log_error("cannot extract datatype from dataset %s", node->u.dataset.name);
+    }
+    if (!(node->u.dataset.dataspace = nodelist_extract_unique_node_by_type(&info, NODE_DATASPACE))) {
+        log_error("cannot extract dataspace from dataset %s", node->u.dataset.name);
+    }
+    /* data is optional! */
+    if (!(node->u.dataset.data = nodelist_extract_unique_node_by_type(&info, NODE_DATA))) {
+        log_warn("cannot extract data from dataset %s", node->u.dataset.name);
+    }
+    if (nodelist_length(info) > 0) {
+        log_warn("%d unrecognized elements in dataset", nodelist_length(info));
+        nodelist_free(info);
+    }
     return node;
 }
 
@@ -116,38 +117,37 @@ node_new_dataspace_simple(nodelist_t *cur_dims, nodelist_t *max_dims)
 }
 
 node_t *
-node_new_data(nodelist_t *values)
+node_new_datatype(hid_t id)
 {
     node_t *node;
     assert(node = malloc(sizeof *node));
-    node->type = NODE_DATA;
+    node->type = NODE_DATATYPE;
     node->id = -1;
-    node->u.data.values = values;
+    node->u.datatype.id = id;
     return node;
 }
 
 node_t *
-node_new_dataset(char *name, nodelist_t *info)
+node_new_file(char *name, node_t *root_group)
 {
     node_t *node;
     assert(node = malloc(sizeof *node));
-    node->type = NODE_DATASET;
+    node->type = NODE_FILE;
     node->id = -1;
-    node->u.dataset.name = name;
-    if (!(node->u.dataset.datatype = nodelist_extract_unique_node_by_type(&info, NODE_DATATYPE))) {
-        log_error("cannot extract datatype from dataset %s", node->u.dataset.name);
-    }
-    if (!(node->u.dataset.dataspace = nodelist_extract_unique_node_by_type(&info, NODE_DATASPACE))) {
-        log_error("cannot extract dataspace from dataset %s", node->u.dataset.name);
-    }
-    /* data is optional! */
-    if (!(node->u.dataset.data = nodelist_extract_unique_node_by_type(&info, NODE_DATA))) {
-        log_warn("cannot extract data from dataset %s", node->u.dataset.name);
-    }
-    if (nodelist_length(info) > 0) {
-        log_warn("%d unrecognized elements in dataset", nodelist_length(info));
-        nodelist_free(info);
-    }
+    node->u.file.name = name; /* no need to strdup(); storage already allocated by unquote() */
+    node->u.file.root_group = root_group;
+    return node;
+}
+
+node_t *
+node_new_group(char *name, nodelist_t *members)
+{
+    node_t *node;
+    assert(node = malloc(sizeof *node));
+    node->type = NODE_GROUP;
+    node->id = -1;
+    node->u.group.name = name;
+    node->u.group.members = members;
     return node;
 }
 
@@ -178,24 +178,6 @@ node_free(node_t *node)
 {
     if (!node) return;
     switch (node->type) {
-        case NODE_FILE:
-            free(node->u.file.name);
-            node_free(node->u.file.root_group);
-            break;
-
-        case NODE_GROUP:
-            free(node->u.group.name);
-            nodelist_free(node->u.group.members);
-            break;
-
-        case NODE_DATATYPE:
-            break;
-
-        case NODE_DATASPACE:
-            free(node->u.dataspace.cur_dims);
-            free(node->u.dataspace.max_dims);
-            break;
-
         case NODE_DATA:
             nodelist_free(node->u.data.values);
             break;
@@ -205,6 +187,24 @@ node_free(node_t *node)
             node_free(node->u.dataset.datatype);
             node_free(node->u.dataset.dataspace);
             node_free(node->u.dataset.data);
+            break;
+
+        case NODE_DATASPACE:
+            free(node->u.dataspace.cur_dims);
+            free(node->u.dataspace.max_dims);
+            break;
+
+        case NODE_DATATYPE:
+            break;
+
+        case NODE_FILE:
+            free(node->u.file.name);
+            node_free(node->u.file.root_group);
+            break;
+
+        case NODE_GROUP:
+            free(node->u.group.name);
+            nodelist_free(node->u.group.members);
             break;
 
         case NODE_INTEGER:
@@ -218,99 +218,6 @@ node_free(node_t *node)
             assert(0);
     }
     free(node);
-}
-
-static int
-node_create_file(node_t *node, node_t *parent, opt_t *options)
-{
-    herr_t err;
-    const char *name;
-
-    assert(node);
-    assert(node->type == NODE_FILE);
-    assert(options);
-    name = options->output;
-    if (name && strcmp(name, node->u.file.name) != 0) {
-        log_info("output file name (%s) different from DDL (%s); ignoring DDL file name", name, node->u.file.name);
-    }
-    if (!name) name = node->u.file.name;
-
-    node->id = H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    if (node->id < 0) {
-        err = -1;
-        goto fail;
-    }
-    err = node_create(node->u.file.root_group, node, options);
-    if (err < 0) goto fail;
-    err = H5Fclose(node->id);
-    if (err < 0) goto fail;
-    return 0;
-
-fail:
-    log_error("failure creating HDF5 file (err = %d)", err);
-    if (node->id >= 0) H5Fclose(node->id); /* attempt emergency close */
-    return -1;
-}
-
-static int
-node_create_group(node_t *node, node_t *parent, opt_t *options)
-{
-    herr_t err;
-
-    assert(node);
-    assert(node->type == NODE_GROUP);
-    if (parent->type == NODE_FILE && strcmp(node->u.group.name, "/") == 0) {
-        /* root group "/" is created automatically */
-        node->id = H5Gopen(parent->id, node->u.group.name, H5P_DEFAULT);
-    }
-    else {
-        node->id = H5Gcreate(parent->id, node->u.group.name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    }
-    if (node->id < 0) return -1;
-    nodelist_t *p = node->u.group.members;
-    while (p) {
-        err = node_create(p->node, node, options);
-        if (err < 0) return err;
-        p = p->next;
-    }
-    err = H5Gclose(node->id);
-    if (err < 0) return err;
-    return 0;
-}
-
-static int
-node_create_datatype(node_t *node, node_t *parent, opt_t *options)
-{
-    assert(node);
-    assert(node->type == NODE_DATATYPE);
-    node->id = H5Tcopy(node->u.datatype.id);
-    if (node->id < 0) return -1;
-    /* cannot close datatype before dataset is written */
-    return 0;
-}
-
-static int
-node_create_dataspace(node_t *node, node_t *parent, opt_t *options)
-{
-    assert(node);
-    assert(node->type == NODE_DATASPACE);
-    switch (node->u.dataspace.type) {
-        case DATASPACE_SCALAR:
-            node->id = H5Screate(H5S_SCALAR);
-            break;
-
-        case DATASPACE_SIMPLE:
-            node->id = H5Screate_simple(node->u.dataspace.rank,
-                    node->u.dataspace.cur_dims, node->u.dataspace.max_dims);
-            break;
-
-        default:
-            log_error("cannot create a dataspace of type %d", node->u.dataspace.type);
-            return -1;
-    }
-    if (node->id < 0) return -1;
-    /* cannot close dataspace before dataset is written */
-    return 0;
 }
 
 #define COPY_DATA_FROM_NODELIST(src_, dst_, dtype, n) do { \
@@ -386,9 +293,9 @@ node_create_dataset(node_t *node, node_t *parent, opt_t *options)
 
     assert(node);
     assert(node->type == NODE_DATASET);
-    err = node_create_datatype(node->u.dataset.datatype, node, options);
+    err = node_create(node->u.dataset.datatype, node, options);
     if (err < 0) return err;
-    err = node_create_dataspace(node->u.dataset.dataspace, node, options);
+    err = node_create(node->u.dataset.dataspace, node, options);
     if (err < 0) return err;
     node->id = H5Dcreate(parent->id, node->u.dataset.name, node->u.dataset.datatype->id,
             node->u.dataset.dataspace->id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -409,25 +316,118 @@ node_create_dataset(node_t *node, node_t *parent, opt_t *options)
     return 0;
 }
 
+static int
+node_create_dataspace(node_t *node, node_t *parent, opt_t *options)
+{
+    assert(node);
+    assert(node->type == NODE_DATASPACE);
+    switch (node->u.dataspace.type) {
+        case DATASPACE_SCALAR:
+            node->id = H5Screate(H5S_SCALAR);
+            break;
+
+        case DATASPACE_SIMPLE:
+            node->id = H5Screate_simple(node->u.dataspace.rank,
+                    node->u.dataspace.cur_dims, node->u.dataspace.max_dims);
+            break;
+
+        default:
+            log_error("cannot create a dataspace of type %d", node->u.dataspace.type);
+            return -1;
+    }
+    if (node->id < 0) return -1;
+    /* cannot close dataspace before dataset is written */
+    return 0;
+}
+
+static int
+node_create_datatype(node_t *node, node_t *parent, opt_t *options)
+{
+    assert(node);
+    assert(node->type == NODE_DATATYPE);
+    node->id = H5Tcopy(node->u.datatype.id);
+    if (node->id < 0) return -1;
+    /* cannot close datatype before dataset is written */
+    return 0;
+}
+
+static int
+node_create_file(node_t *node, node_t *parent, opt_t *options)
+{
+    herr_t err;
+    const char *name;
+
+    assert(node);
+    assert(node->type == NODE_FILE);
+    assert(options);
+    name = options->output;
+    if (name && strcmp(name, node->u.file.name) != 0) {
+        log_info("output file name (%s) different from DDL (%s); ignoring DDL file name", name, node->u.file.name);
+    }
+    if (!name) name = node->u.file.name;
+
+    node->id = H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    if (node->id < 0) {
+        err = -1;
+        goto fail;
+    }
+    err = node_create(node->u.file.root_group, node, options);
+    if (err < 0) goto fail;
+    err = H5Fclose(node->id);
+    if (err < 0) goto fail;
+    return 0;
+
+fail:
+    log_error("failure creating HDF5 file (err = %d)", err);
+    if (node->id >= 0) H5Fclose(node->id); /* attempt emergency close */
+    return -1;
+}
+
+static int
+node_create_group(node_t *node, node_t *parent, opt_t *options)
+{
+    herr_t err;
+
+    assert(node);
+    assert(node->type == NODE_GROUP);
+    if (parent->type == NODE_FILE && strcmp(node->u.group.name, "/") == 0) {
+        /* root group "/" is created automatically */
+        node->id = H5Gopen(parent->id, node->u.group.name, H5P_DEFAULT);
+    }
+    else {
+        node->id = H5Gcreate(parent->id, node->u.group.name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    }
+    if (node->id < 0) return -1;
+    nodelist_t *p = node->u.group.members;
+    while (p) {
+        err = node_create(p->node, node, options);
+        if (err < 0) return err;
+        p = p->next;
+    }
+    err = H5Gclose(node->id);
+    if (err < 0) return err;
+    return 0;
+}
+
 int
 node_create(node_t *node, node_t *parent, opt_t *options)
 {
     assert(node);
     switch (node->type) {
+        case NODE_DATASET:
+            return node_create_dataset(node, parent, options);
+
+        case NODE_DATASPACE:
+            return node_create_dataspace(node, parent, options);
+
+        case NODE_DATATYPE:
+            return node_create_datatype(node, parent, options);
+
         case NODE_FILE:
             return node_create_file(node, parent, options);
 
         case NODE_GROUP:
             return node_create_group(node, parent, options);
-
-        case NODE_DATATYPE:
-            return node_create_datatype(node, parent, options);
-
-        case NODE_DATASPACE:
-            return node_create_dataspace(node, parent, options);
-
-        case NODE_DATASET:
-            return node_create_dataset(node, parent, options);
 
         default:
             log_error("cannot create a node of type %d", node->type);

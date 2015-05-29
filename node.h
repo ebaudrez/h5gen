@@ -27,12 +27,12 @@ typedef struct node_t node_t;
 typedef struct nodelist_t nodelist_t;
 
 typedef enum {
-    NODE_FILE,
-    NODE_GROUP,
-    NODE_DATATYPE,
-    NODE_DATASPACE,
     NODE_DATA,
     NODE_DATASET,
+    NODE_DATASPACE,
+    NODE_DATATYPE,
+    NODE_FILE,
+    NODE_GROUP,
     NODE_INTEGER,
     NODE_REALNUM
 } node_type_t;
@@ -42,18 +42,15 @@ typedef struct node_t {
     hid_t       id;
     union {
         struct {
+            nodelist_t *values;
+        } data;
+
+        struct {
             char   *name;
-            node_t *root_group;
-        } file;
-
-        struct {
-            char       *name;
-            nodelist_t *members;
-        } group;
-
-        struct {
-            hid_t id;
-        } datatype;
+            node_t *datatype;
+            node_t *dataspace;
+            node_t *data;
+        } dataset;
 
         struct {
             enum {
@@ -66,15 +63,18 @@ typedef struct node_t {
         } dataspace;
 
         struct {
-            nodelist_t *values;
-        } data;
+            hid_t id;
+        } datatype;
 
         struct {
             char   *name;
-            node_t *datatype;
-            node_t *dataspace;
-            node_t *data;
-        } dataset;
+            node_t *root_group;
+        } file;
+
+        struct {
+            char       *name;
+            nodelist_t *members;
+        } group;
 
         struct {
             int value;
@@ -89,13 +89,13 @@ typedef struct node_t {
 /* root node of the tree */
 extern node_t *file;
 
-extern node_t *node_new_file(char *name, node_t *root_group);
-extern node_t *node_new_group(char *name, nodelist_t *members);
-extern node_t *node_new_datatype(hid_t id);
-extern node_t *node_new_dataspace_scalar(void);
-extern node_t *node_new_dataspace_simple(nodelist_t *cur_dims, nodelist_t *max_dims);
 extern node_t *node_new_data(nodelist_t *values);
 extern node_t *node_new_dataset(char *name, nodelist_t *info);
+extern node_t *node_new_dataspace_scalar(void);
+extern node_t *node_new_dataspace_simple(nodelist_t *cur_dims, nodelist_t *max_dims);
+extern node_t *node_new_datatype(hid_t id);
+extern node_t *node_new_file(char *name, node_t *root_group);
+extern node_t *node_new_group(char *name, nodelist_t *members);
 extern node_t *node_new_integer(int value);
 extern node_t *node_new_realnum(double value);
 extern void    node_free(node_t *node);
