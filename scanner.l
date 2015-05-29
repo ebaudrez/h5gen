@@ -46,6 +46,7 @@ EXP     ([eE][-+]?[0-9]+)
 [{}(),/]                { return yytext[0]; }
 
     /* keywords */
+"ATTRIBUTE"             { return ATTRIBUTE; }
 "DATA"                  { BEGIN IN_DATA; return DATA; }
 "DATASET"               { return DATASET; }
 "DATASPACE"             { return DATASPACE; }

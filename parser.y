@@ -32,6 +32,7 @@
 }
 
 /* tokens */
+%token ATTRIBUTE
 %token DATA
 %token DATASET
 %token DATASPACE
@@ -46,6 +47,7 @@
 %token SIMPLE
 
 /* nonterminals */
+%type <node> attribute
 %type <node> data
 %type <node> dataset
 %type <node> dataspace
@@ -71,6 +73,7 @@ member      : group
             | dataspace
             | dataset
             | data
+            | attribute
             ;
 
 value_list  : value                { $$ = nodelist_append(NULL, $1); }
@@ -78,6 +81,9 @@ value_list  : value                { $$ = nodelist_append(NULL, $1); }
             ;
 
 par_value_list : '(' value_list ')' { $$ = $2; }
+
+attribute   : ATTRIBUTE QUOTED_STRING '{' member_list '}' { $$ = node_new_attribute($2, $4); }
+            ;
 
 value       : INTEGER { $$ = node_new_integer($1); }
             | REALNUM { $$ = node_new_realnum($1); }

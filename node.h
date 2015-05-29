@@ -27,6 +27,7 @@ typedef struct node_t node_t;
 typedef struct nodelist_t nodelist_t;
 
 typedef enum {
+    NODE_ATTRIBUTE,
     NODE_DATA,
     NODE_DATASET,
     NODE_DATASPACE,
@@ -41,6 +42,13 @@ typedef struct node_t {
     node_type_t type;
     hid_t       id;
     union {
+        struct {
+            char   *name;
+            node_t *datatype;
+            node_t *dataspace;
+            node_t *data;
+        } attribute;
+
         struct {
             nodelist_t *values;
         } data;
@@ -89,6 +97,7 @@ typedef struct node_t {
 /* root node of the tree */
 extern node_t *file;
 
+extern node_t *node_new_attribute(char *name, nodelist_t *info);
 extern node_t *node_new_data(nodelist_t *values);
 extern node_t *node_new_dataset(char *name, nodelist_t *info);
 extern node_t *node_new_dataspace_scalar(void);

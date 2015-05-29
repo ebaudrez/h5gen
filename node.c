@@ -29,6 +29,31 @@
 node_t *file = NULL;
 
 node_t *
+node_new_attribute(char *name, nodelist_t *info)
+{
+    node_t *node;
+    assert(node = malloc(sizeof *node));
+    node->type = NODE_ATTRIBUTE;
+    node->id = -1;
+    node->u.attribute.name = name;
+    if (!(node->u.attribute.datatype = nodelist_extract_unique_node_by_type(&info, NODE_DATATYPE))) {
+        log_error("cannot extract datatype from attribute %s", node->u.attribute.name);
+    }
+    if (!(node->u.attribute.dataspace = nodelist_extract_unique_node_by_type(&info, NODE_DATASPACE))) {
+        log_error("cannot extract dataspace from attribute %s", node->u.attribute.name);
+    }
+    /* data is optional! */
+    if (!(node->u.attribute.data = nodelist_extract_unique_node_by_type(&info, NODE_DATA))) {
+        log_warn("cannot extract data from attribute %s", node->u.attribute.name);
+    }
+    if (nodelist_length(info) > 0) {
+        log_warn("%d unrecognized elements in attribute", nodelist_length(info));
+        nodelist_free(info);
+    }
+    return node;
+}
+
+node_t *
 node_new_data(nodelist_t *values)
 {
     node_t *node;
@@ -178,6 +203,13 @@ node_free(node_t *node)
 {
     if (!node) return;
     switch (node->type) {
+        case NODE_ATTRIBUTE:
+            free(node->u.attribute.name);
+            node_free(node->u.attribute.datatype);
+            node_free(node->u.attribute.dataspace);
+            node_free(node->u.attribute.data);
+            break;
+
         case NODE_DATA:
             nodelist_free(node->u.data.values);
             break;
@@ -283,6 +315,38 @@ prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_
     return buf;
 }
 #undef COPY_DATA_FROM_NODELIST
+
+static int
+node_create_attribute(node_t *node, node_t *parent, opt_t *options)
+{
+    hid_t mem_type_id;
+    void *buf;
+    herr_t err;
+
+    assert(node);
+    assert(node->type == NODE_ATTRIBUTE);
+    err = node_create(node->u.attribute.datatype, node, options);
+    if (err < 0) return err;
+    err = node_create(node->u.attribute.dataspace, node, options);
+    if (err < 0) return err;
+    node->id = H5Acreate(parent->id, node->u.attribute.name, node->u.attribute.datatype->id,
+            node->u.attribute.dataspace->id, H5P_DEFAULT, H5P_DEFAULT);
+    if (node->id < 0) return -1;
+    if (node->u.attribute.data) {
+        assert(buf = prepare_data(node->u.attribute.datatype, node->u.attribute.dataspace,
+                    node->u.attribute.data, &mem_type_id, options));
+        err = H5Awrite(node->id, mem_type_id, buf);
+        free(buf);
+    }
+    if (err < 0) return err;
+    err = H5Aclose(node->id);
+    if (err < 0) return err;
+    err = H5Sclose(node->u.attribute.dataspace->id);
+    if (err < 0) return err;
+    err = H5Tclose(node->u.attribute.datatype->id);
+    if (err < 0) return err;
+    return 0;
+}
 
 static int
 node_create_dataset(node_t *node, node_t *parent, opt_t *options)
@@ -414,6 +478,9 @@ node_create(node_t *node, node_t *parent, opt_t *options)
 {
     assert(node);
     switch (node->type) {
+        case NODE_ATTRIBUTE:
+            return node_create_attribute(node, parent, options);
+
         case NODE_DATASET:
             return node_create_dataset(node, parent, options);
 
