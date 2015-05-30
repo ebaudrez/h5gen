@@ -150,7 +150,7 @@ node_new_datatype(hid_t id)
     assert(node = malloc(sizeof *node));
     node->type = NODE_DATATYPE;
     node->id = -1;
-    node->u.datatype.id = id;
+    node->u.datatype.templ = id;
     return node;
 }
 
@@ -420,7 +420,7 @@ node_create_datatype(node_t *node, node_t *parent, opt_t *options)
 {
     assert(node);
     assert(node->type == NODE_DATATYPE);
-    node->id = H5Tcopy(node->u.datatype.id);
+    node->id = H5Tcopy(node->u.datatype.templ);
     if (node->id < 0) return -1;
     /* cannot close datatype before dataset is written */
     return 0;

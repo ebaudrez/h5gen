@@ -72,7 +72,7 @@ typedef struct node_t {
         } dataspace;
 
         struct {
-            hid_t id;
+            hid_t templ;
         } datatype;
 
         struct {
