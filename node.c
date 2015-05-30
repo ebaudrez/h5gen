@@ -299,7 +299,7 @@ prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_
             log_error("cannot prepare data for a dataspace of type %d", dataspace->u.dataspace.type);
             return NULL;
     }
-    class = H5Tget_class(datatype->u.datatype.id);
+    class = H5Tget_class(datatype->id);
     switch (class) {
         case H5T_INTEGER: *mem_type_id = H5T_NATIVE_INT; break;
         case H5T_FLOAT: *mem_type_id = H5T_NATIVE_DOUBLE; break;
