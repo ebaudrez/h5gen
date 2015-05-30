@@ -144,13 +144,26 @@ node_new_dataspace_simple(nodelist_t *cur_dims, nodelist_t *max_dims)
 }
 
 node_t *
-node_new_datatype(hid_t id)
+node_new_datatype_float(hid_t id)
 {
     node_t *node;
     assert(node = malloc(sizeof *node));
     node->type = NODE_DATATYPE;
     node->id = -1;
-    node->u.datatype.templ = id;
+    node->u.datatype.class = H5T_FLOAT;
+    node->u.datatype.template = id;
+    return node;
+}
+
+node_t *
+node_new_datatype_integer(hid_t id)
+{
+    node_t *node;
+    assert(node = malloc(sizeof *node));
+    node->type = NODE_DATATYPE;
+    node->id = -1;
+    node->u.datatype.class = H5T_INTEGER;
+    node->u.datatype.template = id;
     return node;
 }
 
@@ -272,13 +285,15 @@ node_free(node_t *node)
 static void *
 prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_id, opt_t *options)
 {
-    H5T_class_t class;
     hsize_t n;
     size_t sz;
     void *buf;
     assert(datatype);
+    assert(datatype->type == NODE_DATATYPE);
     assert(dataspace);
+    assert(dataspace->type == NODE_DATASPACE);
     assert(data);
+    assert(data->type == NODE_DATA);
     assert(mem_type_id);
     switch (dataspace->u.dataspace.type) {
         case DATASPACE_SCALAR:
@@ -299,21 +314,20 @@ prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_
             log_error("cannot prepare data for a dataspace of type %d", dataspace->u.dataspace.type);
             return NULL;
     }
-    class = H5Tget_class(datatype->id);
-    switch (class) {
+    switch (datatype->u.datatype.class) {
         case H5T_INTEGER: *mem_type_id = H5T_NATIVE_INT; break;
         case H5T_FLOAT: *mem_type_id = H5T_NATIVE_DOUBLE; break;
         default:
-            log_error("cannot choose a memory datatype for datatype class %d", class);
+            log_error("cannot choose a memory datatype for datatype class %d", datatype->u.datatype.class);
             return NULL;
     }
     sz = H5Tget_size(*mem_type_id);
     assert(n * sz > 0);
     assert(buf = malloc(n * sz));
-    switch (class) {
+    switch (datatype->u.datatype.class) {
         case H5T_INTEGER: COPY_DATA_FROM_NODELIST(data->u.data.values, buf, int, n); break;
         case H5T_FLOAT: COPY_DATA_FROM_NODELIST(data->u.data.values, buf, double, n); break;
-        /* 'class' is known to be good, from the switch statement above */
+        /* datatype class is known to be good, from the switch statement above */
     }
     return buf;
 }
@@ -420,7 +434,8 @@ node_create_datatype(node_t *node, node_t *parent, opt_t *options)
 {
     assert(node);
     assert(node->type == NODE_DATATYPE);
-    node->id = H5Tcopy(node->u.datatype.templ);
+    assert(node->u.datatype.class == H5T_INTEGER || node->u.datatype.class == H5T_FLOAT);
+    node->id = H5Tcopy(node->u.datatype.template);
     if (node->id < 0) return -1;
     /* cannot close datatype before dataset is written */
     return 0;

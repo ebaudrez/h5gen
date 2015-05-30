@@ -72,7 +72,8 @@ typedef struct node_t {
         } dataspace;
 
         struct {
-            hid_t templ;
+            H5T_class_t class;
+            hid_t       template;
         } datatype;
 
         struct {
@@ -103,7 +104,8 @@ extern node_t *node_new_data(nodelist_t *values);
 extern node_t *node_new_dataset(char *name, nodelist_t *info);
 extern node_t *node_new_dataspace_scalar(void);
 extern node_t *node_new_dataspace_simple(nodelist_t *cur_dims, nodelist_t *max_dims);
-extern node_t *node_new_datatype(hid_t id);
+extern node_t *node_new_datatype_float(hid_t id);
+extern node_t *node_new_datatype_integer(hid_t id);
 extern node_t *node_new_file(char *name, node_t *root_group);
 extern node_t *node_new_group(char *name, nodelist_t *members);
 extern node_t *node_new_integer(int value);

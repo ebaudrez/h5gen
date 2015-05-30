@@ -40,7 +40,8 @@
 %token GROUP
 %token HDF5
 %token <integer> INTEGER
-%token <id> PREDEF_DATATYPE
+%token <id> DATATYPE_FLOAT
+%token <id> DATATYPE_INTEGER
 %token <string> QUOTED_STRING
 %token <realnum> REALNUM
 %token SCALAR
@@ -95,7 +96,8 @@ file        : HDF5 QUOTED_STRING '{' group '}' { file = node_new_file($2, $4); }
 group       : GROUP QUOTED_STRING '{' member_list '}' { $$ = node_new_group($2, $4); }
             ;
 
-datatype    : DATATYPE PREDEF_DATATYPE { $$ = node_new_datatype($2); }
+datatype    : DATATYPE DATATYPE_FLOAT   { $$ = node_new_datatype_float($2); }
+            | DATATYPE DATATYPE_INTEGER { $$ = node_new_datatype_integer($2); }
             ;
 
 dataspace   : DATASPACE SCALAR                                           { $$ = node_new_dataspace_scalar(); }
