@@ -46,63 +46,63 @@ EXP     ([eE][-+]?[0-9]+)
 [{}(),/]                { return yytext[0]; }
 
     /* keywords */
-"ATTRIBUTE"             { return ATTRIBUTE; }
-"DATA"                  { BEGIN IN_DATA; return DATA; }
-"DATASET"               { return DATASET; }
-"DATASPACE"             { return DATASPACE; }
-"DATATYPE"              { return DATATYPE; }
-"GROUP"                 { return GROUP; }
-"HDF5"                  { return HDF5; }
-"SCALAR"                { return SCALAR; }
-"SIMPLE"                { return SIMPLE; }
+"ATTRIBUTE"             { return TOK_ATTRIBUTE; }
+"DATA"                  { BEGIN IN_DATA; return TOK_DATA; }
+"DATASET"               { return TOK_DATASET; }
+"DATASPACE"             { return TOK_DATASPACE; }
+"DATATYPE"              { return TOK_DATATYPE; }
+"GROUP"                 { return TOK_GROUP; }
+"HDF5"                  { return TOK_HDF5; }
+"SCALAR"                { return TOK_SCALAR; }
+"SIMPLE"                { return TOK_SIMPLE; }
 
     /* predefined float datatypes, from H5Tpublic.h */
-"H5T_IEEE_F32BE"        { yylval.id = H5T_IEEE_F32BE; return DATATYPE_FLOAT; }
-"H5T_IEEE_F32LE"        { yylval.id = H5T_IEEE_F32LE; return DATATYPE_FLOAT; }
-"H5T_IEEE_F64BE"        { yylval.id = H5T_IEEE_F64BE; return DATATYPE_FLOAT; }
-"H5T_IEEE_F64LE"        { yylval.id = H5T_IEEE_F64LE; return DATATYPE_FLOAT; }
-"H5T_NATIVE_FLOAT"      { yylval.id = H5T_NATIVE_FLOAT; return DATATYPE_FLOAT; }
-"H5T_NATIVE_DOUBLE"     { yylval.id = H5T_NATIVE_DOUBLE; return DATATYPE_FLOAT; }
-"H5T_NATIVE_LDOUBLE"    { yylval.id = H5T_NATIVE_LDOUBLE; return DATATYPE_FLOAT; }
+"H5T_IEEE_F32BE"        { yylval.id = H5T_IEEE_F32BE; return TOK_FLOAT_TYPE; }
+"H5T_IEEE_F32LE"        { yylval.id = H5T_IEEE_F32LE; return TOK_FLOAT_TYPE; }
+"H5T_IEEE_F64BE"        { yylval.id = H5T_IEEE_F64BE; return TOK_FLOAT_TYPE; }
+"H5T_IEEE_F64LE"        { yylval.id = H5T_IEEE_F64LE; return TOK_FLOAT_TYPE; }
+"H5T_NATIVE_FLOAT"      { yylval.id = H5T_NATIVE_FLOAT; return TOK_FLOAT_TYPE; }
+"H5T_NATIVE_DOUBLE"     { yylval.id = H5T_NATIVE_DOUBLE; return TOK_FLOAT_TYPE; }
+"H5T_NATIVE_LDOUBLE"    { yylval.id = H5T_NATIVE_LDOUBLE; return TOK_FLOAT_TYPE; }
 
     /* predefined integer datatypes, from H5Tpublic.h */
-"H5T_STD_I8BE"          { yylval.id = H5T_STD_I8BE; return DATATYPE_INTEGER; }
-"H5T_STD_I8LE"          { yylval.id = H5T_STD_I8LE; return DATATYPE_INTEGER; }
-"H5T_STD_I16BE"         { yylval.id = H5T_STD_I16BE; return DATATYPE_INTEGER; }
-"H5T_STD_I16LE"         { yylval.id = H5T_STD_I16LE; return DATATYPE_INTEGER; }
-"H5T_STD_I32BE"         { yylval.id = H5T_STD_I32BE; return DATATYPE_INTEGER; }
-"H5T_STD_I32LE"         { yylval.id = H5T_STD_I32LE; return DATATYPE_INTEGER; }
-"H5T_STD_I64BE"         { yylval.id = H5T_STD_I64BE; return DATATYPE_INTEGER; }
-"H5T_STD_I64LE"         { yylval.id = H5T_STD_I64LE; return DATATYPE_INTEGER; }
-"H5T_STD_U8BE"          { yylval.id = H5T_STD_U8BE; return DATATYPE_INTEGER; }
-"H5T_STD_U8LE"          { yylval.id = H5T_STD_U8LE; return DATATYPE_INTEGER; }
-"H5T_STD_U16BE"         { yylval.id = H5T_STD_U16BE; return DATATYPE_INTEGER; }
-"H5T_STD_U16LE"         { yylval.id = H5T_STD_U16LE; return DATATYPE_INTEGER; }
-"H5T_STD_U32BE"         { yylval.id = H5T_STD_U32BE; return DATATYPE_INTEGER; }
-"H5T_STD_U32LE"         { yylval.id = H5T_STD_U32LE; return DATATYPE_INTEGER; }
-"H5T_STD_U64BE"         { yylval.id = H5T_STD_U64BE; return DATATYPE_INTEGER; }
-"H5T_STD_U64LE"         { yylval.id = H5T_STD_U64LE; return DATATYPE_INTEGER; }
-"H5T_NATIVE_CHAR"       { yylval.id = H5T_NATIVE_CHAR; return DATATYPE_INTEGER; }
-"H5T_NATIVE_SCHAR"      { yylval.id = H5T_NATIVE_SCHAR; return DATATYPE_INTEGER; }
-"H5T_NATIVE_UCHAR"      { yylval.id = H5T_NATIVE_UCHAR; return DATATYPE_INTEGER; }
-"H5T_NATIVE_SHORT"      { yylval.id = H5T_NATIVE_SHORT; return DATATYPE_INTEGER; }
-"H5T_NATIVE_USHORT"     { yylval.id = H5T_NATIVE_USHORT; return DATATYPE_INTEGER; }
-"H5T_NATIVE_INT"        { yylval.id = H5T_NATIVE_INT; return DATATYPE_INTEGER; }
-"H5T_NATIVE_UINT"       { yylval.id = H5T_NATIVE_UINT; return DATATYPE_INTEGER; }
-"H5T_NATIVE_LONG"       { yylval.id = H5T_NATIVE_LONG; return DATATYPE_INTEGER; }
-"H5T_NATIVE_ULONG"      { yylval.id = H5T_NATIVE_ULONG; return DATATYPE_INTEGER; }
-"H5T_NATIVE_LLONG"      { yylval.id = H5T_NATIVE_LLONG; return DATATYPE_INTEGER; }
-"H5T_NATIVE_ULLONG"     { yylval.id = H5T_NATIVE_ULLONG; return DATATYPE_INTEGER; }
+"H5T_STD_I8BE"          { yylval.id = H5T_STD_I8BE; return TOK_INTEGER_TYPE; }
+"H5T_STD_I8LE"          { yylval.id = H5T_STD_I8LE; return TOK_INTEGER_TYPE; }
+"H5T_STD_I16BE"         { yylval.id = H5T_STD_I16BE; return TOK_INTEGER_TYPE; }
+"H5T_STD_I16LE"         { yylval.id = H5T_STD_I16LE; return TOK_INTEGER_TYPE; }
+"H5T_STD_I32BE"         { yylval.id = H5T_STD_I32BE; return TOK_INTEGER_TYPE; }
+"H5T_STD_I32LE"         { yylval.id = H5T_STD_I32LE; return TOK_INTEGER_TYPE; }
+"H5T_STD_I64BE"         { yylval.id = H5T_STD_I64BE; return TOK_INTEGER_TYPE; }
+"H5T_STD_I64LE"         { yylval.id = H5T_STD_I64LE; return TOK_INTEGER_TYPE; }
+"H5T_STD_U8BE"          { yylval.id = H5T_STD_U8BE; return TOK_INTEGER_TYPE; }
+"H5T_STD_U8LE"          { yylval.id = H5T_STD_U8LE; return TOK_INTEGER_TYPE; }
+"H5T_STD_U16BE"         { yylval.id = H5T_STD_U16BE; return TOK_INTEGER_TYPE; }
+"H5T_STD_U16LE"         { yylval.id = H5T_STD_U16LE; return TOK_INTEGER_TYPE; }
+"H5T_STD_U32BE"         { yylval.id = H5T_STD_U32BE; return TOK_INTEGER_TYPE; }
+"H5T_STD_U32LE"         { yylval.id = H5T_STD_U32LE; return TOK_INTEGER_TYPE; }
+"H5T_STD_U64BE"         { yylval.id = H5T_STD_U64BE; return TOK_INTEGER_TYPE; }
+"H5T_STD_U64LE"         { yylval.id = H5T_STD_U64LE; return TOK_INTEGER_TYPE; }
+"H5T_NATIVE_CHAR"       { yylval.id = H5T_NATIVE_CHAR; return TOK_INTEGER_TYPE; }
+"H5T_NATIVE_SCHAR"      { yylval.id = H5T_NATIVE_SCHAR; return TOK_INTEGER_TYPE; }
+"H5T_NATIVE_UCHAR"      { yylval.id = H5T_NATIVE_UCHAR; return TOK_INTEGER_TYPE; }
+"H5T_NATIVE_SHORT"      { yylval.id = H5T_NATIVE_SHORT; return TOK_INTEGER_TYPE; }
+"H5T_NATIVE_USHORT"     { yylval.id = H5T_NATIVE_USHORT; return TOK_INTEGER_TYPE; }
+"H5T_NATIVE_INT"        { yylval.id = H5T_NATIVE_INT; return TOK_INTEGER_TYPE; }
+"H5T_NATIVE_UINT"       { yylval.id = H5T_NATIVE_UINT; return TOK_INTEGER_TYPE; }
+"H5T_NATIVE_LONG"       { yylval.id = H5T_NATIVE_LONG; return TOK_INTEGER_TYPE; }
+"H5T_NATIVE_ULONG"      { yylval.id = H5T_NATIVE_ULONG; return TOK_INTEGER_TYPE; }
+"H5T_NATIVE_LLONG"      { yylval.id = H5T_NATIVE_LLONG; return TOK_INTEGER_TYPE; }
+"H5T_NATIVE_ULLONG"     { yylval.id = H5T_NATIVE_ULLONG; return TOK_INTEGER_TYPE; }
 
     /* numbers */
--?[0-9]+                { yylval.integer = atoi(yytext); return INTEGER; }
+-?[0-9]+                { yylval.integer = atoi(yytext); return TOK_INTEGER; }
 -?([0-9]+\.[0-9]*|\.[0-9]+){EXP}? |
--?[0-9]+{EXP}           { yylval.realnum = atof(yytext); return REALNUM; }
+-?[0-9]+{EXP}           { yylval.realnum = atof(yytext); return TOK_REALNUM; }
 
     /* strings and identifiers */
 \"([^"\\]|\\['"])*\"    { yylval.string = strdup(yytext + 1);
                           yylval.string[yyleng - 2] = '\0';
-                          return QUOTED_STRING; }
+                          return TOK_QUOTED_STRING; }
 [_a-zA-Z][_a-zA-Z0-9]*  { yyerror("unrecognized identifier %s", yytext); }
 
     /* other */

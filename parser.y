@@ -32,20 +32,20 @@
 }
 
 /* tokens */
-%token ATTRIBUTE
-%token DATA
-%token DATASET
-%token DATASPACE
-%token DATATYPE
-%token GROUP
-%token HDF5
-%token <integer> INTEGER
-%token <id> DATATYPE_FLOAT
-%token <id> DATATYPE_INTEGER
-%token <string> QUOTED_STRING
-%token <realnum> REALNUM
-%token SCALAR
-%token SIMPLE
+%token TOK_ATTRIBUTE
+%token TOK_DATA
+%token TOK_DATASET
+%token TOK_DATASPACE
+%token TOK_DATATYPE
+%token TOK_GROUP
+%token TOK_HDF5
+%token <integer> TOK_INTEGER
+%token <id> TOK_FLOAT_TYPE
+%token <id> TOK_INTEGER_TYPE
+%token <string> TOK_QUOTED_STRING
+%token <realnum> TOK_REALNUM
+%token TOK_SCALAR
+%token TOK_SIMPLE
 
 /* nonterminals */
 %type <node> attribute
@@ -83,29 +83,29 @@ value_list  : value                { $$ = nodelist_append(NULL, $1); }
 
 par_value_list : '(' value_list ')' { $$ = $2; }
 
-attribute   : ATTRIBUTE QUOTED_STRING '{' member_list '}' { $$ = node_new_attribute($2, $4); }
+attribute   : TOK_ATTRIBUTE TOK_QUOTED_STRING '{' member_list '}' { $$ = node_new_attribute($2, $4); }
             ;
 
-value       : INTEGER { $$ = node_new_integer($1); }
-            | REALNUM { $$ = node_new_realnum($1); }
+value       : TOK_INTEGER { $$ = node_new_integer($1); }
+            | TOK_REALNUM { $$ = node_new_realnum($1); }
             ;
 
-file        : HDF5 QUOTED_STRING '{' group '}' { file = node_new_file($2, $4); }
+file        : TOK_HDF5 TOK_QUOTED_STRING '{' group '}' { file = node_new_file($2, $4); }
             ;
 
-group       : GROUP QUOTED_STRING '{' member_list '}' { $$ = node_new_group($2, $4); }
+group       : TOK_GROUP TOK_QUOTED_STRING '{' member_list '}' { $$ = node_new_group($2, $4); }
             ;
 
-datatype    : DATATYPE DATATYPE_FLOAT   { $$ = node_new_datatype_float($2); }
-            | DATATYPE DATATYPE_INTEGER { $$ = node_new_datatype_integer($2); }
+datatype    : TOK_DATATYPE TOK_FLOAT_TYPE   { $$ = node_new_datatype_float($2); }
+            | TOK_DATATYPE TOK_INTEGER_TYPE { $$ = node_new_datatype_integer($2); }
             ;
 
-dataspace   : DATASPACE SCALAR                                           { $$ = node_new_dataspace_scalar(); }
-            | DATASPACE SIMPLE '{' par_value_list '/' par_value_list '}' { $$ = node_new_dataspace_simple($4, $6); }
+dataspace   : TOK_DATASPACE TOK_SCALAR                                           { $$ = node_new_dataspace_scalar(); }
+            | TOK_DATASPACE TOK_SIMPLE '{' par_value_list '/' par_value_list '}' { $$ = node_new_dataspace_simple($4, $6); }
             ;
 
-data        : DATA '{' value_list '}' { $$ = node_new_data($3); }
+data        : TOK_DATA '{' value_list '}' { $$ = node_new_data($3); }
             ;
 
-dataset     : DATASET QUOTED_STRING '{' member_list '}' { $$ = node_new_dataset($2, $4); }
+dataset     : TOK_DATASET TOK_QUOTED_STRING '{' member_list '}' { $$ = node_new_dataset($2, $4); }
             ;
