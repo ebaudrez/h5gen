@@ -102,7 +102,7 @@ EXP     ([eE][-+]?[0-9]+)
     /* strings and identifiers */
 \"([^"\\]|\\['"])*\"    { yylval.string = strdup(yytext + 1);
                           yylval.string[yyleng - 2] = '\0';
-                          return TOK_QUOTED_STRING; }
+                          return TOK_STRING; }
 [_a-zA-Z][_a-zA-Z0-9]*  { yyerror("unrecognized identifier %s", yytext); }
 
     /* other */

@@ -42,7 +42,7 @@
 %token TOK_HDF5
 %token <integer> TOK_INTEGER
 %token <id> TOK_INTEGER_TYPE
-%token <string> TOK_QUOTED_STRING
+%token <string> TOK_STRING
 %token <realnum> TOK_REALNUM
 %token TOK_SCALAR
 %token TOK_SIMPLE
@@ -65,13 +65,13 @@
 
 %%
 
-attribute   : TOK_ATTRIBUTE TOK_QUOTED_STRING '{' member_list '}' { $$ = node_new_attribute($2, $4); }
+attribute   : TOK_ATTRIBUTE TOK_STRING '{' member_list '}' { $$ = node_new_attribute($2, $4); }
             ;
 
 data        : TOK_DATA '{' value_list '}' { $$ = node_new_data($3); }
             ;
 
-dataset     : TOK_DATASET TOK_QUOTED_STRING '{' member_list '}' { $$ = node_new_dataset($2, $4); }
+dataset     : TOK_DATASET TOK_STRING '{' member_list '}' { $$ = node_new_dataset($2, $4); }
             ;
 
 dataspace   : TOK_DATASPACE TOK_SCALAR                                           { $$ = node_new_dataspace_scalar(); }
@@ -82,10 +82,10 @@ datatype    : TOK_DATATYPE TOK_FLOAT_TYPE   { $$ = node_new_datatype_float($2); 
             | TOK_DATATYPE TOK_INTEGER_TYPE { $$ = node_new_datatype_integer($2); }
             ;
 
-file        : TOK_HDF5 TOK_QUOTED_STRING '{' group '}' { file = node_new_file($2, $4); }
+file        : TOK_HDF5 TOK_STRING '{' group '}' { file = node_new_file($2, $4); }
             ;
 
-group       : TOK_GROUP TOK_QUOTED_STRING '{' member_list '}' { $$ = node_new_group($2, $4); }
+group       : TOK_GROUP TOK_STRING '{' member_list '}' { $$ = node_new_group($2, $4); }
             ;
 
 member      : attribute
