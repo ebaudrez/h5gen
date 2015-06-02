@@ -29,16 +29,23 @@
     int         integer;
     double      realnum;
     hid_t       id;
+    H5T_cset_t  cset;
+    H5T_str_t   strpad;
 }
 
 /* tokens */
 %token TOK_ATTRIBUTE
+%token <id> TOK_CHAR_TYPE
+%token TOK_CSET
+%token <cset> TOK_CSET_VAL
+%token TOK_CTYPE
 %token TOK_DATA
 %token TOK_DATASET
 %token TOK_DATASPACE
 %token TOK_DATATYPE
 %token <id> TOK_FLOAT_TYPE
 %token TOK_GROUP
+%token TOK_H5T_STRING
 %token TOK_HDF5
 %token <integer> TOK_INTEGER
 %token <id> TOK_INTEGER_TYPE
@@ -46,6 +53,9 @@
 %token <realnum> TOK_REALNUM
 %token TOK_SCALAR
 %token TOK_SIMPLE
+%token TOK_STRPAD
+%token <strpad> TOK_STRPAD_VAL
+%token TOK_STRSIZE
 
 /* nonterminals */
 %type <node> attribute
@@ -58,6 +68,7 @@
 %type <node> member
 %type <list> member_list
 %type <list> par_value_list
+%type <node> string
 %type <node> value
 %type <list> value_list
 
@@ -80,6 +91,7 @@ dataspace   : TOK_DATASPACE TOK_SCALAR                                          
 
 datatype    : TOK_DATATYPE TOK_FLOAT_TYPE   { $$ = node_new_datatype_float($2); }
             | TOK_DATATYPE TOK_INTEGER_TYPE { $$ = node_new_datatype_integer($2); }
+            | TOK_DATATYPE string           { $$ = $2; }
             ;
 
 file        : TOK_HDF5 TOK_STRING '{' group '}' { file = node_new_file($2, $4); }
@@ -102,8 +114,17 @@ member_list : /* empty */        { $$ = NULL; }
 
 par_value_list : '(' value_list ')' { $$ = $2; }
 
+string      : TOK_H5T_STRING '{'
+                TOK_STRSIZE TOK_INTEGER ';'
+                TOK_STRPAD TOK_STRPAD_VAL ';'
+                TOK_CSET TOK_CSET_VAL ';'
+                TOK_CTYPE TOK_CHAR_TYPE ';'
+              '}' { $$ = node_new_datatype_string($4, $7, $10, $13); }
+            ;
+
 value       : TOK_INTEGER { $$ = node_new_integer($1); }
             | TOK_REALNUM { $$ = node_new_realnum($1); }
+            | TOK_STRING  { $$ = node_new_string($1); }
             ;
 
 value_list  : value                { $$ = nodelist_append(NULL, $1); }

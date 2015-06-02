@@ -154,6 +154,9 @@ node_new_datatype_float(hid_t id)
     node->id = -1;
     node->u.datatype.class = H5T_FLOAT;
     node->u.datatype.template = id;
+    node->u.datatype.size = 0;
+    node->u.datatype.strpad = H5T_PAD_ERROR;
+    node->u.datatype.cset = H5T_CSET_ERROR;
     return node;
 }
 
@@ -166,6 +169,24 @@ node_new_datatype_integer(hid_t id)
     node->id = -1;
     node->u.datatype.class = H5T_INTEGER;
     node->u.datatype.template = id;
+    node->u.datatype.size = 0;
+    node->u.datatype.strpad = H5T_PAD_ERROR;
+    node->u.datatype.cset = H5T_CSET_ERROR;
+    return node;
+}
+
+node_t *
+node_new_datatype_string(size_t strsize, H5T_str_t strpad, H5T_cset_t cset, hid_t ctype)
+{
+    node_t *node;
+    assert(node = malloc(sizeof *node));
+    node->type = NODE_DATATYPE;
+    node->id = -1;
+    node->u.datatype.class = H5T_STRING;
+    node->u.datatype.template = ctype;
+    node->u.datatype.size = strsize;
+    node->u.datatype.strpad = strpad;
+    node->u.datatype.cset = cset;
     return node;
 }
 
@@ -212,6 +233,17 @@ node_new_realnum(double value)
     node->type = NODE_REALNUM;
     node->id = -1;
     node->u.realnum.value = value;
+    return node;
+}
+
+node_t *
+node_new_string(char *value)
+{
+    node_t *node;
+    assert(node = malloc(sizeof *node));
+    node->type = NODE_STRING;
+    node->id = -1;
+    node->u.string.value = value;
     return node;
 }
 
@@ -264,6 +296,10 @@ node_free(node_t *node)
         case NODE_REALNUM:
             break;
 
+        case NODE_STRING:
+            free(node->u.string.value);
+            break;
+
         default:
             log_error("cannot free a node of type %d", node->type);
             assert(0);
@@ -301,7 +337,7 @@ node_create_attribute(node_t *node, node_t *parent, opt_t *options)
     return 0;
 }
 
-#define COPY_DATA_FROM_NODELIST(src_, dst_, dtype, n) do { \
+#define COPY_NODELIST_TO_NUMERIC_BUF(src_, dst_, dtype, n) do { \
     nodelist_t *src = (src_); \
     dtype *dst = (dst_), *start = (dst_); \
     while (src) { \
@@ -315,12 +351,30 @@ node_create_attribute(node_t *node, node_t *parent, opt_t *options)
     } \
     assert(dst - start == (n)); /* check that all values were supplied */ \
 } while (0)
+#define COPY_NODELIST_TO_CHARACTER_BUF(src_, dst_, n, sz) do { \
+    nodelist_t *src = (src_); \
+    char *dst = (dst_), *start = (dst_); \
+    while (src) { \
+        assert(dst - start < ((n) * (sz))); /* guard against buffer overrun */ \
+        switch (src->node->type) { \
+            /* in principle, could convert from numeric with snprintf() */ \
+            case NODE_STRING: \
+                strncpy(dst, src->node->u.string.value, sz); \
+                dst += sz; \
+                break; \
+            default: log_error("cannot copy data value from node of type %d", src->node->type); break; \
+        } \
+        src = src->next; \
+    } \
+    assert(dst - start == ((n) * (sz))); /* check that all values were supplied */ \
+} while (0)
 static int
 node_create_data(node_t *node, node_t *parent, opt_t *options)
 {
     node_t *dataspace, *datatype;
     hsize_t n;
     size_t sz;
+    herr_t err;
 
     assert(node);
     assert(node->type == NODE_DATA);
@@ -371,6 +425,15 @@ node_create_data(node_t *node, node_t *parent, opt_t *options)
             if (node->u.data.mem_type_id < 0) return -1;
             break;
 
+        case H5T_STRING:
+            node->u.data.mem_type_id = H5Tcopy(H5T_C_S1);
+            if (node->u.data.mem_type_id < 0) return -1;
+            err = H5Tset_size(node->u.data.mem_type_id, datatype->u.datatype.size);
+            if (err < 0) return err;
+            err = H5Tset_strpad(node->u.data.mem_type_id, H5T_STR_NULLTERM);
+            if (err < 0) return err;
+            break;
+
         default:
             log_error("cannot create a memory datatype for datatype class %d", datatype->u.datatype.class);
             return -1;
@@ -379,13 +442,15 @@ node_create_data(node_t *node, node_t *parent, opt_t *options)
     assert(n * sz > 0);
     assert(node->u.data.buf = malloc(n * sz));
     switch (datatype->u.datatype.class) {
-        case H5T_INTEGER: COPY_DATA_FROM_NODELIST(node->u.data.values, node->u.data.buf, int, n); break;
-        case H5T_FLOAT: COPY_DATA_FROM_NODELIST(node->u.data.values, node->u.data.buf, double, n); break;
+        case H5T_INTEGER: COPY_NODELIST_TO_NUMERIC_BUF(node->u.data.values, node->u.data.buf, int, n); break;
+        case H5T_FLOAT: COPY_NODELIST_TO_NUMERIC_BUF(node->u.data.values, node->u.data.buf, double, n); break;
+        case H5T_STRING: COPY_NODELIST_TO_CHARACTER_BUF(node->u.data.values, node->u.data.buf, n, sz); break;
         /* datatype class is known to be good, from the switch statement above */
     }
     return 0;
 }
-#undef COPY_DATA_FROM_NODELIST
+#undef COPY_NODELIST_TO_NUMERIC_BUF
+#undef COPY_NODELIST_TO_CHARACTER_BUF
 
 static int
 node_create_dataset(node_t *node, node_t *parent, opt_t *options)
@@ -454,9 +519,27 @@ node_create_datatype(node_t *node, node_t *parent, opt_t *options)
 {
     assert(node);
     assert(node->type == NODE_DATATYPE);
-    assert(node->u.datatype.class == H5T_INTEGER || node->u.datatype.class == H5T_FLOAT);
-    node->id = H5Tcopy(node->u.datatype.template);
+    switch (node->u.datatype.class) {
+        case H5T_INTEGER:
+        case H5T_FLOAT:
+        case H5T_STRING:
+            node->id = H5Tcopy(node->u.datatype.template);
+            break;
+
+        default:
+            log_error("cannot create a datatype of type class %d", node->u.datatype.class);
+            return -1;
+    }
     if (node->id < 0) return -1;
+    if (node->u.datatype.class == H5T_STRING) {
+        herr_t err;
+        err = H5Tset_size(node->id, node->u.datatype.size);
+        if (err < 0) return err;
+        err = H5Tset_strpad(node->id, node->u.datatype.strpad);
+        if (err < 0) return err;
+        err = H5Tset_cset(node->id, node->u.datatype.cset);
+        if (err < 0) return err;
+    }
     /* cannot close datatype before dataset is written */
     return 0;
 }

@@ -43,18 +43,30 @@ EXP     ([eE][-+]?[0-9]+)
 <IN_DATA>^[ \t]*\([ \t]*[0-9]+[ \t]*(,[ \t]*[0-9]+[ \t]*)*\)[ \t]*:
 
     /* one-character tokens */
-[{}(),/]                { return yytext[0]; }
+[{}(),;/]               { return yytext[0]; }
 
     /* keywords */
 "ATTRIBUTE"             { return TOK_ATTRIBUTE; }
+"CSET"                  { return TOK_CSET; }
+"CTYPE"                 { return TOK_CTYPE; }
 "DATA"                  { BEGIN IN_DATA; return TOK_DATA; }
 "DATASET"               { return TOK_DATASET; }
 "DATASPACE"             { return TOK_DATASPACE; }
 "DATATYPE"              { return TOK_DATATYPE; }
 "GROUP"                 { return TOK_GROUP; }
+"H5T_STRING"            { return TOK_H5T_STRING; }
 "HDF5"                  { return TOK_HDF5; }
 "SCALAR"                { return TOK_SCALAR; }
 "SIMPLE"                { return TOK_SIMPLE; }
+"STRPAD"                { return TOK_STRPAD; }
+"STRSIZE"               { return TOK_STRSIZE; }
+
+    /* string characteristics */
+"H5T_CSET_ASCII"        { yylval.cset = H5T_CSET_ASCII; return TOK_CSET_VAL; }
+"H5T_CSET_UTF8"         { yylval.cset = H5T_CSET_UTF8; return TOK_CSET_VAL; }
+"H5T_STR_NULLPAD"       { yylval.strpad = H5T_STR_NULLPAD; return TOK_STRPAD_VAL; }
+"H5T_STR_NULLTERM"      { yylval.strpad = H5T_STR_NULLTERM; return TOK_STRPAD_VAL; }
+"H5T_STR_SPACEPAD"      { yylval.strpad = H5T_STR_SPACEPAD; return TOK_STRPAD_VAL; }
 
     /* predefined float datatypes, from H5Tpublic.h */
 "H5T_IEEE_F32BE"        { yylval.id = H5T_IEEE_F32BE; return TOK_FLOAT_TYPE; }
@@ -93,6 +105,9 @@ EXP     ([eE][-+]?[0-9]+)
 "H5T_NATIVE_ULONG"      { yylval.id = H5T_NATIVE_ULONG; return TOK_INTEGER_TYPE; }
 "H5T_NATIVE_LLONG"      { yylval.id = H5T_NATIVE_LLONG; return TOK_INTEGER_TYPE; }
 "H5T_NATIVE_ULLONG"     { yylval.id = H5T_NATIVE_ULLONG; return TOK_INTEGER_TYPE; }
+
+    /* predefined character datatypes, from H5Tpublic.h */
+"H5T_C_S1"              { yylval.id = H5T_C_S1; return TOK_CHAR_TYPE; }
 
     /* numbers */
 -?[0-9]+                { yylval.integer = atoi(yytext); return TOK_INTEGER; }

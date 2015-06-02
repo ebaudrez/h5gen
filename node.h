@@ -35,7 +35,8 @@ typedef enum {
     NODE_FILE,
     NODE_GROUP,
     NODE_INTEGER,
-    NODE_REALNUM
+    NODE_REALNUM,
+    NODE_STRING
 } node_type_t;
 
 typedef struct node_t {
@@ -76,6 +77,9 @@ typedef struct node_t {
         struct {
             H5T_class_t class;
             hid_t       template;
+            size_t      size;
+            H5T_str_t   strpad;
+            H5T_cset_t  cset;
         } datatype;
 
         struct {
@@ -95,6 +99,10 @@ typedef struct node_t {
         struct {
             double value;
         } realnum;
+
+        struct {
+            char *value;
+        } string;
     } u;
 } node_t;
 
@@ -108,10 +116,12 @@ extern node_t *node_new_dataspace_scalar(void);
 extern node_t *node_new_dataspace_simple(nodelist_t *cur_dims, nodelist_t *max_dims);
 extern node_t *node_new_datatype_float(hid_t id);
 extern node_t *node_new_datatype_integer(hid_t id);
+extern node_t *node_new_datatype_string(size_t strsize, H5T_str_t strpad, H5T_cset_t cset, hid_t ctype);
 extern node_t *node_new_file(char *name, node_t *root_group);
 extern node_t *node_new_group(char *name, nodelist_t *members);
 extern node_t *node_new_integer(int value);
 extern node_t *node_new_realnum(double value);
+extern node_t *node_new_string(char *value);
 extern void    node_free(node_t *node);
 extern int     node_create(node_t *node, node_t *parent, opt_t *options);
 
