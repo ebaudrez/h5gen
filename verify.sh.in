@@ -20,11 +20,13 @@ function fetch_opt {
 
 failed=0
 counter=0
-# count files - solution courtesy of http://unix.stackexchange.com/a/90152/65370
-set -- @srcdir@/*.ddl
+# when run from 'make check', no arguments are supplied; use the .ddl from the source dir
+# (the solution to count them is courtesy of http://unix.stackexchange.com/a/90152/65370)
+# otherwise, run only the tests supplied as arguments
+test $# -eq 0 && set -- @srcdir@/*.ddl
 n=`echo $#`
 printf "1..$n\n"
-for ddl in @srcdir@/*.ddl
+for ddl in $*
 do
     ok=y
     counter=`expr $counter + 1`
