@@ -288,8 +288,8 @@ node_create_attribute(node_t *node, node_t *parent, opt_t *options)
         err = node_create(node->u.attribute.data, node, options);
         if (err < 0) return err;
         err = H5Awrite(node->id, node->u.attribute.data->u.data.mem_type_id, node->u.attribute.data->u.data.buf);
+        if (err < 0) return err;
     }
-    if (err < 0) return err;
     err = H5Aclose(node->id);
     if (err < 0) return err;
     err = H5Sclose(node->u.attribute.dataspace->id);
@@ -402,8 +402,8 @@ node_create_dataset(node_t *node, node_t *parent, opt_t *options)
         err = node_create(node->u.dataset.data, node, options);
         if (err < 0) return err;
         err = H5Dwrite(node->id, node->u.dataset.data->u.data.mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, node->u.dataset.data->u.data.buf);
+        if (err < 0) return err;
     }
-    if (err < 0) return err;
     err = H5Dclose(node->id);
     if (err < 0) return err;
     err = H5Sclose(node->u.dataset.dataspace->id);
