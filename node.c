@@ -61,6 +61,8 @@ node_new_data(nodelist_t *values)
     node->type = NODE_DATA;
     node->id = -1;
     node->u.data.values = values;
+    node->u.data.mem_type_id = -1;
+    node->u.data.buf = NULL;
     return node;
 }
 
@@ -227,6 +229,7 @@ node_free(node_t *node)
 
         case NODE_DATA:
             nodelist_free(node->u.data.values);
+            free(node->u.data.buf);
             break;
 
         case NODE_DATASET:
@@ -268,6 +271,34 @@ node_free(node_t *node)
     free(node);
 }
 
+static int
+node_create_attribute(node_t *node, node_t *parent, opt_t *options)
+{
+    herr_t err;
+    assert(node);
+    assert(node->type == NODE_ATTRIBUTE);
+    err = node_create(node->u.attribute.datatype, node, options);
+    if (err < 0) return err;
+    err = node_create(node->u.attribute.dataspace, node, options);
+    if (err < 0) return err;
+    node->id = H5Acreate(parent->id, node->u.attribute.name, node->u.attribute.datatype->id,
+            node->u.attribute.dataspace->id, H5P_DEFAULT, H5P_DEFAULT);
+    if (node->id < 0) return -1;
+    if (node->u.attribute.data) {
+        err = node_create(node->u.attribute.data, node, options);
+        if (err < 0) return err;
+        err = H5Awrite(node->id, node->u.attribute.data->u.data.mem_type_id, node->u.attribute.data->u.data.buf);
+    }
+    if (err < 0) return err;
+    err = H5Aclose(node->id);
+    if (err < 0) return err;
+    err = H5Sclose(node->u.attribute.dataspace->id);
+    if (err < 0) return err;
+    err = H5Tclose(node->u.attribute.datatype->id);
+    if (err < 0) return err;
+    return 0;
+}
+
 #define COPY_DATA_FROM_NODELIST(src_, dst_, dtype, n) do { \
     nodelist_t *src = (src_); \
     dtype *dst = (dst_), *start = (dst_); \
@@ -282,19 +313,32 @@ node_free(node_t *node)
     } \
     assert(dst - start == (n)); /* check that all values were supplied */ \
 } while (0)
-static void *
-prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_id, opt_t *options)
+static int
+node_create_data(node_t *node, node_t *parent, opt_t *options)
 {
+    node_t *dataspace, *datatype;
     hsize_t n;
     size_t sz;
-    void *buf;
-    assert(datatype);
-    assert(datatype->type == NODE_DATATYPE);
-    assert(dataspace);
+
+    assert(node);
+    assert(node->type == NODE_DATA);
+    switch (parent->type) {
+        case NODE_ATTRIBUTE:
+            assert(dataspace = parent->u.attribute.dataspace);
+            assert(datatype = parent->u.attribute.datatype);
+            break;
+
+        case NODE_DATASET:
+            assert(dataspace = parent->u.dataset.dataspace);
+            assert(datatype = parent->u.dataset.datatype);
+            break;
+
+        default:
+            log_error("a DATA block must belong to either an ATTRIBUTE or a DATASET");
+            return -1;
+    }
     assert(dataspace->type == NODE_DATASPACE);
-    assert(data);
-    assert(data->type == NODE_DATA);
-    assert(mem_type_id);
+    assert(datatype->type == NODE_DATATYPE);
     switch (dataspace->u.dataspace.type) {
         case DATASPACE_SCALAR:
             n = 1;
@@ -311,67 +355,32 @@ prepare_data(node_t *datatype, node_t *dataspace, node_t *data, hid_t *mem_type_
             break;
 
         default:
-            log_error("cannot prepare data for a dataspace of type %d", dataspace->u.dataspace.type);
-            return NULL;
+            log_error("cannot create data for a dataspace of type %d", dataspace->u.dataspace.type);
+            return -1;
     }
     switch (datatype->u.datatype.class) {
-        case H5T_INTEGER: *mem_type_id = H5T_NATIVE_INT; break;
-        case H5T_FLOAT: *mem_type_id = H5T_NATIVE_DOUBLE; break;
+        case H5T_INTEGER: node->u.data.mem_type_id = H5T_NATIVE_INT; break;
+        case H5T_FLOAT: node->u.data.mem_type_id = H5T_NATIVE_DOUBLE; break;
         default:
             log_error("cannot choose a memory datatype for datatype class %d", datatype->u.datatype.class);
-            return NULL;
+            return -1;
     }
-    sz = H5Tget_size(*mem_type_id);
+    sz = H5Tget_size(node->u.data.mem_type_id);
     assert(n * sz > 0);
-    assert(buf = malloc(n * sz));
+    assert(node->u.data.buf = malloc(n * sz));
     switch (datatype->u.datatype.class) {
-        case H5T_INTEGER: COPY_DATA_FROM_NODELIST(data->u.data.values, buf, int, n); break;
-        case H5T_FLOAT: COPY_DATA_FROM_NODELIST(data->u.data.values, buf, double, n); break;
+        case H5T_INTEGER: COPY_DATA_FROM_NODELIST(node->u.data.values, node->u.data.buf, int, n); break;
+        case H5T_FLOAT: COPY_DATA_FROM_NODELIST(node->u.data.values, node->u.data.buf, double, n); break;
         /* datatype class is known to be good, from the switch statement above */
     }
-    return buf;
+    return 0;
 }
 #undef COPY_DATA_FROM_NODELIST
 
 static int
-node_create_attribute(node_t *node, node_t *parent, opt_t *options)
-{
-    hid_t mem_type_id;
-    void *buf;
-    herr_t err;
-
-    assert(node);
-    assert(node->type == NODE_ATTRIBUTE);
-    err = node_create(node->u.attribute.datatype, node, options);
-    if (err < 0) return err;
-    err = node_create(node->u.attribute.dataspace, node, options);
-    if (err < 0) return err;
-    node->id = H5Acreate(parent->id, node->u.attribute.name, node->u.attribute.datatype->id,
-            node->u.attribute.dataspace->id, H5P_DEFAULT, H5P_DEFAULT);
-    if (node->id < 0) return -1;
-    if (node->u.attribute.data) {
-        assert(buf = prepare_data(node->u.attribute.datatype, node->u.attribute.dataspace,
-                    node->u.attribute.data, &mem_type_id, options));
-        err = H5Awrite(node->id, mem_type_id, buf);
-        free(buf);
-    }
-    if (err < 0) return err;
-    err = H5Aclose(node->id);
-    if (err < 0) return err;
-    err = H5Sclose(node->u.attribute.dataspace->id);
-    if (err < 0) return err;
-    err = H5Tclose(node->u.attribute.datatype->id);
-    if (err < 0) return err;
-    return 0;
-}
-
-static int
 node_create_dataset(node_t *node, node_t *parent, opt_t *options)
 {
-    hid_t mem_type_id;
-    void *buf;
     herr_t err;
-
     assert(node);
     assert(node->type == NODE_DATASET);
     err = node_create(node->u.dataset.datatype, node, options);
@@ -390,10 +399,9 @@ node_create_dataset(node_t *node, node_t *parent, opt_t *options)
         }
     }
     if (node->u.dataset.data) {
-        assert(buf = prepare_data(node->u.dataset.datatype, node->u.dataset.dataspace,
-                    node->u.dataset.data, &mem_type_id, options));
-        err = H5Dwrite(node->id, mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf);
-        free(buf);
+        err = node_create(node->u.dataset.data, node, options);
+        if (err < 0) return err;
+        err = H5Dwrite(node->id, node->u.dataset.data->u.data.mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, node->u.dataset.data->u.data.buf);
     }
     if (err < 0) return err;
     err = H5Dclose(node->id);
@@ -506,6 +514,9 @@ node_create(node_t *node, node_t *parent, opt_t *options)
     switch (node->type) {
         case NODE_ATTRIBUTE:
             return node_create_attribute(node, parent, options);
+
+        case NODE_DATA:
+            return node_create_data(node, parent, options);
 
         case NODE_DATASET:
             return node_create_dataset(node, parent, options);

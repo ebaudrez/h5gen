@@ -51,6 +51,8 @@ typedef struct node_t {
 
         struct {
             nodelist_t *values;
+            hid_t       mem_type_id;
+            void       *buf;
         } data;
 
         struct {
