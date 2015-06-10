@@ -3,11 +3,28 @@
 # real name was "G2_SEV1_L20_HR_SOL_TH_20040701_120000_V003.hdf"
 HDF5 "test26.h5" {
 GROUP "/" {
-   ATTRIBUTE "Summary Thermal Products Confidence" {
-      DATATYPE  H5T_IEEE_F64BE
+   ATTRIBUTE "File Creation Time" {
+      DATATYPE  H5T_STRING {
+         STRSIZE 18;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_ASCII;
+         CTYPE H5T_C_S1;
+      }
       DATASPACE  SCALAR
       DATA {
-      (0): 0.80577
+      (0): "20070319 18:13:46"
+      }
+   }
+   ATTRIBUTE "File Name" {
+      DATATYPE  H5T_STRING {
+         STRSIZE 47;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_ASCII;
+         CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+      DATA {
+      (0): "G2_SEV1_L20_HR_SOL_TH_20040701_120000_V003.hdf"
       }
    }
    ATTRIBUTE "Summary Solar Products Confidence" {
@@ -17,28 +34,11 @@ GROUP "/" {
       (0): 0.915634
       }
    }
-   ATTRIBUTE "File Creation Time" {
-      DATATYPE  H5T_STRING {
-            STRSIZE 18;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
+   ATTRIBUTE "Summary Thermal Products Confidence" {
+      DATATYPE  H5T_IEEE_F64BE
       DATASPACE  SCALAR
       DATA {
-      (0): "20070319 18:13:46"
-      }
-   }
-   ATTRIBUTE "File Name" {
-      DATATYPE  H5T_STRING {
-            STRSIZE 47;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-      DATASPACE  SCALAR
-      DATA {
-      (0): "G2_SEV1_L20_HR_SOL_TH_20040701_120000_V003.hdf"
+      (0): 0.80577
       }
    }
    GROUP "Angles" {
@@ -54,11 +54,11 @@ GROUP "/" {
          }
          ATTRIBUTE "Unit" {
             DATATYPE  H5T_STRING {
-                  STRSIZE 7;
-                  STRPAD H5T_STR_NULLTERM;
-                  CSET H5T_CSET_ASCII;
-                  CTYPE H5T_C_S1;
-               }
+               STRSIZE 7;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
             DATASPACE  SCALAR
             DATA {
             (0): "Degree"
@@ -77,11 +77,11 @@ GROUP "/" {
          }
          ATTRIBUTE "Unit" {
             DATATYPE  H5T_STRING {
-                  STRSIZE 7;
-                  STRPAD H5T_STR_NULLTERM;
-                  CSET H5T_CSET_ASCII;
-                  CTYPE H5T_C_S1;
-               }
+               STRSIZE 7;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
             DATASPACE  SCALAR
             DATA {
             (0): "Degree"
@@ -100,11 +100,11 @@ GROUP "/" {
          }
          ATTRIBUTE "Unit" {
             DATATYPE  H5T_STRING {
-                  STRSIZE 7;
-                  STRPAD H5T_STR_NULLTERM;
-                  CSET H5T_CSET_ASCII;
-                  CTYPE H5T_C_S1;
-               }
+               STRSIZE 7;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
             DATASPACE  SCALAR
             DATA {
             (0): "Degree"
@@ -123,11 +123,11 @@ GROUP "/" {
          }
          ATTRIBUTE "Unit" {
             DATATYPE  H5T_STRING {
-                  STRSIZE 7;
-                  STRPAD H5T_STR_NULLTERM;
-                  CSET H5T_CSET_ASCII;
-                  CTYPE H5T_C_S1;
-               }
+               STRSIZE 7;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
             DATASPACE  SCALAR
             DATA {
             (0): "Degree"
@@ -138,11 +138,11 @@ GROUP "/" {
    GROUP "GERB" {
       ATTRIBUTE "Instrument Identifier" {
          DATATYPE  H5T_STRING {
-               STRSIZE 3;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 3;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "G2"
@@ -161,21 +161,14 @@ GROUP "/" {
    GROUP "Geolocation" {
       ATTRIBUTE "Geolocation File Name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 44;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 44;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "G2_SEV1_L20_HR_GEO_20060331_023000_V003.hdf"
-         }
-      }
-      ATTRIBUTE "Nominal Satellite Longitude (degrees)" {
-         DATATYPE  H5T_IEEE_F64BE
-         DATASPACE  SCALAR
-         DATA {
-         (0): -3.4
          }
       }
       ATTRIBUTE "Line of Sight North-South Speed" {
@@ -183,6 +176,13 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): 0
+         }
+      }
+      ATTRIBUTE "Nominal Satellite Longitude (degrees)" {
+         DATATYPE  H5T_IEEE_F64BE
+         DATASPACE  SCALAR
+         DATA {
+         (0): -3.4
          }
       }
       GROUP "Rectified Grid" {
@@ -284,11 +284,11 @@ GROUP "/" {
       }
       ATTRIBUTE "Type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 7;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "SEVIRI"
@@ -296,23 +296,23 @@ GROUP "/" {
       }
    }
    GROUP "RMIB" {
-      ATTRIBUTE "Software Identifier" {
-         DATATYPE  H5T_STRING {
-               STRSIZE 16;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "20070305_144906"
-         }
-      }
       ATTRIBUTE "Product Version" {
          DATATYPE  H5T_STD_I32BE
          DATASPACE  SCALAR
          DATA {
          (0): 3
+         }
+      }
+      ATTRIBUTE "Software Identifier" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 16;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "20070305_144906"
          }
       }
    }
@@ -328,36 +328,36 @@ GROUP "/" {
       DATASET "Longwave Correction" {
          DATATYPE  H5T_STD_I16BE
          DATASPACE  SIMPLE { ( 1237, 1237 ) / ( 1237, 1237 ) }
-         ATTRIBUTE "Quantisation Factor" {
-            DATATYPE  H5T_IEEE_F64BE
-            DATASPACE  SCALAR
-            DATA {
-            (0): 0.005
-            }
-         }
          ATTRIBUTE "Offset" {
             DATATYPE  H5T_IEEE_F64BE
             DATASPACE  SCALAR
             DATA {
             (0): 1
+            }
+         }
+         ATTRIBUTE "Quantisation Factor" {
+            DATATYPE  H5T_IEEE_F64BE
+            DATASPACE  SCALAR
+            DATA {
+            (0): 0.005
             }
          }
       }
       DATASET "Shortwave Correction" {
          DATATYPE  H5T_STD_I16BE
          DATASPACE  SIMPLE { ( 1237, 1237 ) / ( 1237, 1237 ) }
-         ATTRIBUTE "Quantisation Factor" {
-            DATATYPE  H5T_IEEE_F64BE
-            DATASPACE  SCALAR
-            DATA {
-            (0): 0.005
-            }
-         }
          ATTRIBUTE "Offset" {
             DATATYPE  H5T_IEEE_F64BE
             DATASPACE  SCALAR
             DATA {
             (0): 1
+            }
+         }
+         ATTRIBUTE "Quantisation Factor" {
+            DATATYPE  H5T_IEEE_F64BE
+            DATASPACE  SCALAR
+            DATA {
+            (0): 0.005
             }
          }
       }
@@ -373,11 +373,11 @@ GROUP "/" {
          }
          ATTRIBUTE "Unit" {
             DATATYPE  H5T_STRING {
-                  STRSIZE 22;
-                  STRPAD H5T_STR_NULLTERM;
-                  CSET H5T_CSET_ASCII;
-                  CTYPE H5T_C_S1;
-               }
+               STRSIZE 22;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
             DATASPACE  SCALAR
             DATA {
             (0): "Watt per square meter"
@@ -396,11 +396,11 @@ GROUP "/" {
          }
          ATTRIBUTE "Unit" {
             DATATYPE  H5T_STRING {
-                  STRSIZE 36;
-                  STRPAD H5T_STR_NULLTERM;
-                  CSET H5T_CSET_ASCII;
-                  CTYPE H5T_C_S1;
-               }
+               STRSIZE 36;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
             DATASPACE  SCALAR
             DATA {
             (0): "Watt per square meter per steradian"
@@ -445,11 +445,11 @@ GROUP "/" {
          }
          ATTRIBUTE "Unit" {
             DATATYPE  H5T_STRING {
-                  STRSIZE 22;
-                  STRPAD H5T_STR_NULLTERM;
-                  CSET H5T_CSET_ASCII;
-                  CTYPE H5T_C_S1;
-               }
+               STRSIZE 22;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
             DATASPACE  SCALAR
             DATA {
             (0): "Watt per square meter"
@@ -468,11 +468,11 @@ GROUP "/" {
          }
          ATTRIBUTE "Unit" {
             DATATYPE  H5T_STRING {
-                  STRSIZE 36;
-                  STRPAD H5T_STR_NULLTERM;
-                  CSET H5T_CSET_ASCII;
-                  CTYPE H5T_C_S1;
-               }
+               STRSIZE 36;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
             DATASPACE  SCALAR
             DATA {
             (0): "Watt per square meter per steradian"
@@ -481,28 +481,28 @@ GROUP "/" {
       }
    }
    GROUP "Scene Identification" {
-      ATTRIBUTE "Thermal Angular Dependency Models Set Version" {
-         DATATYPE  H5T_STRING {
-               STRSIZE 7;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "RMIB.3"
-         }
-      }
       ATTRIBUTE "Solar Angular Dependency Models Set Version" {
          DATATYPE  H5T_STRING {
-               STRSIZE 13;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 13;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "CERES_TRMM.1"
+         }
+      }
+      ATTRIBUTE "Thermal Angular Dependency Models Set Version" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "RMIB.3"
          }
       }
       DATASET "Aerosol Optical Depth IR 1.6" {
@@ -541,23 +541,23 @@ GROUP "/" {
       DATASET "Cloud Cover" {
          DATATYPE  H5T_STD_U8BE
          DATASPACE  SIMPLE { ( 1237, 1237 ) / ( 1237, 1237 ) }
-         ATTRIBUTE "Unit" {
-            DATATYPE  H5T_STRING {
-                  STRSIZE 8;
-                  STRPAD H5T_STR_NULLTERM;
-                  CSET H5T_CSET_ASCII;
-                  CTYPE H5T_C_S1;
-               }
-            DATASPACE  SCALAR
-            DATA {
-            (0): "Percent"
-            }
-         }
          ATTRIBUTE "Quantisation Factor" {
             DATATYPE  H5T_IEEE_F64BE
             DATASPACE  SCALAR
             DATA {
             (0): 0.01
+            }
+         }
+         ATTRIBUTE "Unit" {
+            DATATYPE  H5T_STRING {
+               STRSIZE 8;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+            DATA {
+            (0): "Percent"
             }
          }
       }
@@ -575,23 +575,23 @@ GROUP "/" {
       DATASET "Cloud Phase" {
          DATATYPE  H5T_STD_U8BE
          DATASPACE  SIMPLE { ( 1237, 1237 ) / ( 1237, 1237 ) }
-         ATTRIBUTE "Unit" {
-            DATATYPE  H5T_STRING {
-                  STRSIZE 34;
-                  STRPAD H5T_STR_NULLTERM;
-                  CSET H5T_CSET_ASCII;
-                  CTYPE H5T_C_S1;
-               }
-            DATASPACE  SCALAR
-            DATA {
-            (0): "Percent (Water=0%,Mixed,Ice=100%)"
-            }
-         }
          ATTRIBUTE "Quantisation Factor" {
             DATATYPE  H5T_IEEE_F64BE
             DATASPACE  SCALAR
             DATA {
             (0): 0.01
+            }
+         }
+         ATTRIBUTE "Unit" {
+            DATATYPE  H5T_STRING {
+               STRSIZE 34;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
+            DATASPACE  SCALAR
+            DATA {
+            (0): "Percent (Water=0%,Mixed,Ice=100%)"
             }
          }
       }
@@ -622,11 +622,11 @@ GROUP "/" {
    GROUP "Times" {
       DATASET "Time (per row)" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SIMPLE { ( 1237 ) / ( 1237 ) }
       }
    }
