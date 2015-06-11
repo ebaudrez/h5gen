@@ -27,5 +27,5 @@ sanitize.c
 scanner.c
 stamp-h1
 test-driver
-verify.sh
+verify_ddl.sh
 ylwrap

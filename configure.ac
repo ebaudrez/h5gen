@@ -28,5 +28,5 @@ AC_PATH_PROG([DIFF], [diff])
 AX_WITH_HDF5([], [AC_MSG_ERROR([cannot find HDF5 library])])
 
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([verify.sh], [chmod +x verify.sh])
+AC_CONFIG_FILES([verify_ddl.sh], [chmod +x verify_ddl.sh])
 AC_OUTPUT
