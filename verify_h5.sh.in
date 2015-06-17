@@ -1,0 +1,53 @@
+#!@SHELL@
+# Copyright (C) 2015 Edward Baudrez <edward.baudrez@gmail.com>
+# This file is part of h5gen.
+#
+# h5gen is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# h5gen is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with h5gen; if not, see <http://www.gnu.org/licenses/>.
+function fetch_opt {
+    @AWK@ -e '/^##/ { if (sub("^##[ \t]*" var "[ \t]*=[ \t]*", "")) print }' var="$1" "$2"
+}
+
+if test "x@H5DIFF@" = xno; then
+    printf "1..0 # Skipped: no suitable h5diff found\n"
+    exit 0
+fi
+
+failed=0
+counter=0
+# when run from 'make check', no arguments are supplied; use the .h5 from the source dir
+# (the solution to count them is courtesy of http://unix.stackexchange.com/a/90152/65370)
+# otherwise, run only the tests supplied as arguments
+test $# -eq 0 && set -- @srcdir@/h5/test*.h5
+n=`echo $#`
+printf "1..$n\n"
+for h5 in $*
+do
+    ok=y
+    counter=`expr $counter + 1`
+    basename=`basename $h5`
+    scratch=`mktemp`
+    @H5DUMP@ "$h5" | ./h5gen -o "$scratch" || ok=n
+    if test $ok = y; then
+        @H5DIFF@ "$h5" "$scratch" @H5DIFF_OPT@ || ok=n
+    fi
+    rm -f "$scratch"
+    test $ok = n && printf "not "
+    tap_testname="$basename"
+    printf "ok $counter - $tap_testname"
+    if test $ok = n; then
+        failed=`expr $failed + 1`
+    fi
+    printf "\n"
+done
+exit $failed

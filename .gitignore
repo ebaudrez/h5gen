@@ -28,4 +28,5 @@ scanner.c
 stamp-h1
 test-driver
 verify_ddl.sh
+verify_h5.sh
 ylwrap
