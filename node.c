@@ -681,10 +681,13 @@ node_t *
 nodelist_extract_unique_node_by_type(nodelist_t **list, node_type_t type)
 {
     nodelist_t *tmp;
+    node_t     *node;
     if (!(tmp = nodelist_extract_by_type(list, type))) return NULL;
     if (nodelist_length(tmp) > 1) {
         log_error("list contains more than one node of type %d", type);
         return NULL;
     }
-    return tmp->node;
+    node = tmp->node;
+    free(tmp);
+    return node;
 }
