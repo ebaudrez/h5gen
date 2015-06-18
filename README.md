@@ -103,6 +103,12 @@ have tested against). Any self-test failure should be considered a bug.
 For more detailed installation instructions, please refer to the file `INSTALL`
 inside the distribution.
 
+## RELEASE HISTORY
+
+  * version 0.1, 18 June 2015
+
+    First public release.
+
 ## BUGS
 
 None known. Feedback and bug reports welcome.
