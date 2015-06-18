@@ -100,6 +100,9 @@ Even though they take a while to run, they may alert you of possible problems
 (e.g., when you are using another version of the HDF5 library than the one I
 have tested against). Any self-test failure should be considered a bug.
 
+For more detailed installation instructions, please refer to the file `INSTALL`
+inside the distribution.
+
 ## BUGS
 
 None known. Feedback and bug reports welcome.
