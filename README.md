@@ -91,9 +91,9 @@ package-specific option of note:
 
   * `--with-hdf5=DIR`
 
-    Specifies the path where the HDF5 library is to be found (executables,
-    include files, library). By default, looks into your system's default
-    paths.
+    **Optional.** Specifies the path where the HDF5 library is to be found
+    (executables, include files, library). By default, looks into your system's
+    default paths.
 
 I recommend you run the self-tests by issuing `make check` after compilation.
 Even though they take a while to run, they may alert you of possible problems
