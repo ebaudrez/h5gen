@@ -59,34 +59,34 @@ AC_DEFUN([AX_PROG_H5DIFF], [dnl
 AC_PATH_PROG([H5DIFF], [h5diff])
 AC_CACHE_CHECK([whether h5diff accepts the test files], [ax_cv_prog_h5diff_testfiles],
                [ax_cv_prog_h5diff_testfiles=yes
-                $ac_cv_path_H5DIFF $srcdir/m4/base.h5 $srcdir/m4/base.h5 >/dev/null || ax_cv_prog_h5diff_testfiles=no])
+                $ac_cv_path_H5DIFF $srcdir/base.h5 $srcdir/base.h5 >/dev/null || ax_cv_prog_h5diff_testfiles=no])
 AC_CACHE_CHECK([whether h5diff requires options at the end], [ax_cv_prog_h5diff_optatend],
                [ax_cv_prog_h5diff_optatend=yes
-                $ac_cv_path_H5DIFF -q $srcdir/m4/base.h5 $srcdir/m4/base.h5 >/dev/null && ax_cv_prog_h5diff_optatend=no])
+                $ac_cv_path_H5DIFF -q $srcdir/base.h5 $srcdir/base.h5 >/dev/null && ax_cv_prog_h5diff_optatend=no])
 AC_CACHE_CHECK([whether h5diff detects differences], [ax_cv_prog_h5diff_testdiff],
                [ax_cv_prog_h5diff_testdiff=yes
-                $ac_cv_path_H5DIFF $srcdir/m4/base.h5 $srcdir/m4/dset.h5 >/dev/null && ax_cv_prog_h5diff_testdiff=no])
+                $ac_cv_path_H5DIFF $srcdir/base.h5 $srcdir/dset.h5 >/dev/null && ax_cv_prog_h5diff_testdiff=no])
 AC_CACHE_CHECK([whether h5diff -d works], [ax_cv_prog_h5diff_testd],
                [ax_cv_prog_h5diff_testd=yes
                 if test "x$ax_cv_prog_h5diff_optatend" = xyes; then
-                    $ac_cv_path_H5DIFF $srcdir/m4/base.h5 $srcdir/m4/dset.h5 -d 0.0001 >/dev/null && ax_cv_prog_h5diff_testd=no
-                    $ac_cv_path_H5DIFF $srcdir/m4/base.h5 $srcdir/m4/dset.h5 -d 0.001  >/dev/null || ax_cv_prog_h5diff_testd=no
+                    $ac_cv_path_H5DIFF $srcdir/base.h5 $srcdir/dset.h5 -d 0.0001 >/dev/null && ax_cv_prog_h5diff_testd=no
+                    $ac_cv_path_H5DIFF $srcdir/base.h5 $srcdir/dset.h5 -d 0.001  >/dev/null || ax_cv_prog_h5diff_testd=no
                 else
-                    $ac_cv_path_H5DIFF -d 0.0001 $srcdir/m4/base.h5 $srcdir/m4/dset.h5 >/dev/null && ax_cv_prog_h5diff_testd=no
-                    $ac_cv_path_H5DIFF -d 0.001  $srcdir/m4/base.h5 $srcdir/m4/dset.h5 >/dev/null || ax_cv_prog_h5diff_testd=no
+                    $ac_cv_path_H5DIFF -d 0.0001 $srcdir/base.h5 $srcdir/dset.h5 >/dev/null && ax_cv_prog_h5diff_testd=no
+                    $ac_cv_path_H5DIFF -d 0.001  $srcdir/base.h5 $srcdir/dset.h5 >/dev/null || ax_cv_prog_h5diff_testd=no
                 fi])
 AC_CACHE_CHECK([whether h5diff -p works], [ax_cv_prog_h5diff_testp],
                [ax_cv_prog_h5diff_testp=yes
                 if test "x$ax_cv_prog_h5diff_optatend" = xyes; then
-                    $ac_cv_path_H5DIFF $srcdir/m4/base.h5 $srcdir/m4/dset.h5 -p 0.00001 >/dev/null && ax_cv_prog_h5diff_testp=no
-                    $ac_cv_path_H5DIFF $srcdir/m4/base.h5 $srcdir/m4/dset.h5 -p 0.0001  >/dev/null || ax_cv_prog_h5diff_testp=no
+                    $ac_cv_path_H5DIFF $srcdir/base.h5 $srcdir/dset.h5 -p 0.00001 >/dev/null && ax_cv_prog_h5diff_testp=no
+                    $ac_cv_path_H5DIFF $srcdir/base.h5 $srcdir/dset.h5 -p 0.0001  >/dev/null || ax_cv_prog_h5diff_testp=no
                 else
-                    $ac_cv_path_H5DIFF -p 0.00001 $srcdir/m4/base.h5 $srcdir/m4/dset.h5 >/dev/null && ax_cv_prog_h5diff_testp=no
-                    $ac_cv_path_H5DIFF -p 0.0001  $srcdir/m4/base.h5 $srcdir/m4/dset.h5 >/dev/null || ax_cv_prog_h5diff_testp=no
+                    $ac_cv_path_H5DIFF -p 0.00001 $srcdir/base.h5 $srcdir/dset.h5 >/dev/null && ax_cv_prog_h5diff_testp=no
+                    $ac_cv_path_H5DIFF -p 0.0001  $srcdir/base.h5 $srcdir/dset.h5 >/dev/null || ax_cv_prog_h5diff_testp=no
                 fi])
 AC_CACHE_CHECK([whether h5diff tests attributes], [ax_cv_prog_h5diff_testatt],
                [ax_cv_prog_h5diff_testatt=yes
-                $ac_cv_path_H5DIFF $srcdir/m4/base.h5 $srcdir/m4/att.h5 >/dev/null && ax_cv_prog_h5diff_testatt=no])
+                $ac_cv_path_H5DIFF $srcdir/base.h5 $srcdir/att.h5 >/dev/null && ax_cv_prog_h5diff_testatt=no])
 ax_cv_prog_h5diff_works=yes
 test "x$ax_cv_prog_h5diff_testfiles" = xyes || ax_cv_prog_h5diff_works=no
 test "x$ax_cv_prog_h5diff_testdiff" = xyes || ax_cv_prog_h5diff_works=no
