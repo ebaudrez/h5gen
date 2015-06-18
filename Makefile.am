@@ -6,4 +6,6 @@ AM_YFLAGS = -d
 bin_PROGRAMS = h5gen
 h5gen_SOURCES = h5gen.c scanner.l parser.y node.h node.c log.h log.c utlist.h opt.h opt.c
 check_PROGRAMS = sanitize
+sanitize_SOURCES = sanitize.l
 TESTS = verify_ddl.sh verify_h5.sh
+EXTRA_DIST = att.h5 base.h5 dset.h5 ddl h5
